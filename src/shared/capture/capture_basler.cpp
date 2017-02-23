@@ -46,7 +46,6 @@ CaptureBasler::CaptureBasler(VarList* _settings, QObject* parent) :
 	camera = NULL;
 	ignore_capture_failure = false;
 	converter.OutputPixelFormat = Pylon::PixelType_RGB8packed;
-	//camera.PixelFormat.SetValue(Basler_GigECamera::PixelFormat_YUV422Packed, true);
 	last_buf = NULL;
 
 	settings->addChild(vars = new VarList("Capture Settings"));
@@ -78,7 +77,7 @@ CaptureBasler::CaptureBasler(VarList* _settings, QObject* parent) :
 	v_gamma_enable = new VarBool("enable gamma correction", false);
 	vars->addChild(v_gamma_enable);
 
-	v_gamma = new VarDouble("gamma", 0.5, 0, 1);
+	v_gamma = new VarDouble("gamma", 1.0, 0, 2);
 	vars->addChild(v_gamma);
 
 	v_black_level = new VarDouble("black level", 64, 0, 1000);
@@ -116,6 +115,7 @@ bool CaptureBasler::_buildCamera() {
 				Pylon::CTlFactory::GetInstance().CreateDevice(info));
         printf("Opening camera %d...\n", current_id);
 		camera->Open();
+		camera->PixelFormat.SetValue(Basler_GigECamera::PixelFormat_BayerBG8, true);
         printf("Setting interpacket delay...\n");
 		camera->GevSCPD.SetValue(600);
         printf("Done!\n");
@@ -183,7 +183,7 @@ void CaptureBasler::releaseFrame() {
 	MUTEX_LOCK;
 	try {
 		if (last_buf) {
-			free(last_buf);
+			delete[] last_buf;
 			last_buf = NULL;
 		}
 	} catch (...) {
@@ -252,17 +252,18 @@ RawImage CaptureBasler::getFrame() {
 
 		img.setWidth(capture.GetWidth());
 		img.setHeight(capture.GetHeight());
-		unsigned char* buf = (unsigned char*) malloc(capture.GetImageSize());
+		unsigned char* buf = new unsigned char[capture.GetImageSize()];
 		memcpy(buf, capture.GetBuffer(), capture.GetImageSize());
 		img.setData(buf);
 
 #ifdef OPENCV
+		// equalize(img);
 		// gaussianBlur(img);
         // contrast(img, 1.6);
         // sharpen(img);
 #endif
 
-		last_buf = buf;
+		last_buf = img.getData();
 
 		// Original buffer is not needed anymore, it has been copied to img
 		grab_result.Release();
@@ -375,8 +376,8 @@ void CaptureBasler::writeParameterValues(VarList* vars) {
             camera->BalanceRatioSelector.SetValue(
                     Basler_GigECamera::BalanceRatioSelector_Blue);
             camera->BalanceRatioRaw.SetValue(v_balance_ratio_blue->get());
-            camera->BalanceWhiteAuto.SetValue(
-                    Basler_GigECamera::BalanceWhiteAuto_Once);
+            //camera->BalanceWhiteAuto.SetValue(
+                    //Basler_GigECamera::BalanceWhiteAuto_Once);
 
             if (v_auto_gain->getBool()) {
                 camera->GainAuto.SetValue(Basler_GigECamera::GainAuto_Continuous);
@@ -440,6 +441,20 @@ void CaptureBasler::sharpen(RawImage& img) {
 	cv::GaussianBlur(cv_img_copy, cv_img_copy, cv::Size(), 3);
     cv::addWeighted(cv_img, 2.5, cv_img_copy, -1.5, 0, cv_img);
 }
+
+void CaptureBasler::equalize(RawImage& img) {
+	cv::Mat original(img.getHeight(), img.getWidth(), CV_8UC3, img.getData());
+	cv::Mat equalized(img.getHeight(), img.getWidth(), CV_8UC3, new signed char[img.getNumBytes()]);
+
+	std::vector<cv::Mat> channels;
+	cv::cvtColor(original, equalized, CV_RGB2YCrCb);
+	cv::split(equalized, channels);
+	cv::equalizeHist(channels[0], channels[0]);
+	cv::merge(channels, equalized);
+	cv::cvtColor(equalized, equalized, CV_YCrCb2RGB);
+	img.setData(equalized.data);
+}
+
 #endif
 
 #ifndef VDATA_NO_QT

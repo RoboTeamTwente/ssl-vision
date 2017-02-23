@@ -28,6 +28,7 @@ public:
 	static int count;
 };
 
+
 #ifdef VDATA_NO_QT
 class CaptureBasler: public CaptureInterface
 
@@ -102,6 +103,7 @@ private:
   	void gaussianBlur(RawImage& img);
     void contrast(RawImage& img, double factor);
     void sharpen(RawImage& img);
+    void equalize(RawImage& img);
 #endif
 };
 

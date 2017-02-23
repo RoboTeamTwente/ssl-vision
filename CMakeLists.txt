@@ -189,11 +189,11 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ansi")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g")
 
 #flags to set in debug mode
-set (CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Wl,--no-as-needed")
+set (CMAKE_CXX_FLAGS_DEBUG "-g -Ofast -Wl,--no-as-needed -ltcmalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free -lprofiler")
 
 #flags to set in release mode
 # set (CMAKE_CXX_FLAGS_RELEASE "-g -O0 -march=native -Wl,--no-as-needed")
-set (CMAKE_CXX_FLAGS_RELEASE "-O0 -march=native -Wl,--no-as-needed")
+set (CMAKE_CXX_FLAGS_RELEASE "-Ofast -march=native -Wl,--no-as-needed")
 
 message( STATUS "CC Flags: ${CMAKE_CXX_FLAGS_RELEASE}")
 message (STATUS "Custom CC Flags: ${cc_flags}")

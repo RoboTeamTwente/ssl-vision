@@ -111,8 +111,33 @@ bool CMVisionThreshold::thresholdImageYUV444(Image<raw8> * target, const ImageIn
 
   return true;
 }
+#ifdef OPENCV
+#include "opencv2/opencv.hpp"
 
+struct Thresholder : public cv::ParallelLoopBody {
 
+	const rgb * source_pointer;
+	raw8 * target_pointer;
+	const lut_mask_t * LUT;
+	const int X_SHIFT, Y_SHIFT, Z_SHIFT, Z_AND_Y_BITS, Z_BITS;
+
+	Thresholder(const rgb * source_pointer, raw8 * target_pointer, const lut_mask_t * LUT,
+			int X_SHIFT, int Y_SHIFT, int Z_SHIFT, int Z_AND_Y_BITS, int Z_BITS) :
+				source_pointer(source_pointer), target_pointer(target_pointer),
+				LUT(LUT), X_SHIFT(X_SHIFT), Y_SHIFT(Y_SHIFT), Z_SHIFT(Z_SHIFT),
+				Z_AND_Y_BITS(Z_AND_Y_BITS), Z_BITS(Z_BITS) {}
+
+	void operator()(const cv::Range& range) const {
+		const unsigned end = range.end;
+		for (unsigned i = range.start; i < end; ++i) {
+			rgb p=source_pointer[i];
+			target_pointer[i] =  LUT[(((p.r >> X_SHIFT) << Z_AND_Y_BITS) |
+					((p.g >> Y_SHIFT) << Z_BITS) | (p.b >> Z_SHIFT))];
+		}
+	}
+};
+
+#endif
 
 bool CMVisionThreshold::thresholdImageRGB(Image<raw8> * target, const ImageInterface * source, RGBLUT * lut) {
   if (source->getColorFormat()!=COLOR_RGB8) {
@@ -135,10 +160,16 @@ bool CMVisionThreshold::thresholdImageRGB(Image<raw8> * target, const ImageInter
   int Z_SHIFT=lut->Z_SHIFT;
   int Z_AND_Y_BITS=lut->Z_AND_Y_BITS;
   int Z_BITS = lut->Z_BITS;
+
+#ifdef OPENCV
+  cv::parallel_for_(cv::Range(0, source_size), Thresholder(source_pointer, target_pointer,
+		  LUT, X_SHIFT, Y_SHIFT, Z_SHIFT, Z_AND_Y_BITS, Z_BITS), 4);
+#else
   for (int i=0;i<source_size;i++) {
     rgb p=source_pointer[i];
     target_pointer[i] =  LUT[(((p.r >> X_SHIFT) << Z_AND_Y_BITS) | ((p.g >> Y_SHIFT) << Z_BITS) | (p.b >> Z_SHIFT))];
   }
+#endif
 
   return true;
 }
