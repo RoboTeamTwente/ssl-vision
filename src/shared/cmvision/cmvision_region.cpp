@@ -420,8 +420,24 @@ void ImageProcessor::processYUV444(const ImageInterface * image, int min_blob_ar
   processThresholded(img_thresholded,min_blob_area);
 }
 
+void eliminateSmallRuns(RunList* runlist) {
+	Run* runs = runlist->getRunArrayPointer();
+	int lastY = runs->y;
+	raw8 lastColor = runs->color;
+	for (int i = 1; i < runlist->getUsedRuns() - 1; i++) {
+		if (runs[i].y == lastY && runs[i+1].y == lastY
+				&& runs[i].width < 10
+				&& runs[i].color != lastColor && runs[i+1].color == lastColor) {
+			runs[i].color = lastColor;
+		}
+		lastY = runs[i].y;
+		lastColor = runs[i].color;
+	}
+}
+
 void ImageProcessor::processThresholded(Image<raw8> * _img_thresholded, int min_blob_area) {
   CMVision::RegionProcessing::encodeRuns(_img_thresholded, runlist);
+  eliminateSmallRuns(runlist);
   if (runlist->getUsedRuns() == runlist->getMaxRuns()) {
     printf("Warning: runlength encoder exceeded current max run size of %d\n",runlist->getMaxRuns());
   }

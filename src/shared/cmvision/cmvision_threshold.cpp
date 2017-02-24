@@ -163,7 +163,7 @@ bool CMVisionThreshold::thresholdImageRGB(Image<raw8> * target, const ImageInter
 
 #ifdef OPENCV
   cv::parallel_for_(cv::Range(0, source_size), Thresholder(source_pointer, target_pointer,
-		  LUT, X_SHIFT, Y_SHIFT, Z_SHIFT, Z_AND_Y_BITS, Z_BITS), 4);
+		  LUT, X_SHIFT, Y_SHIFT, Z_SHIFT, Z_AND_Y_BITS, Z_BITS), 8);
 #else
   for (int i=0;i<source_size;i++) {
     rgb p=source_pointer[i];
