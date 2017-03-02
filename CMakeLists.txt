@@ -35,7 +35,7 @@ include_directories(
 include ( ${QT_USE_FILE} )
 
 find_package(mvIMPACT QUIET)
-find_package(Pylon5 REQUIRED)
+find_package(Pylon5 QUIET)
 
 include(src/shared/CMakeLists.txt.inc)
 
