@@ -2,7 +2,7 @@
  * capture_basler.h
  *
  *  Created on: Nov 21, 2016
- *      Author: root
+ *      Author: Dennis
  */
 
 #ifndef CAPTURE_BASLER_H_
@@ -24,7 +24,7 @@ class BaslerInitManager {
 public:
 	static void register_capture();
 	static void unregister_capture();
-//private:
+private:
 	static int count;
 };
 
@@ -56,7 +56,7 @@ public:
 
 	bool stopCapture();
 
-	bool isCapturing() { return is_capturing; };
+	bool isCapturing() { return isGrabbing; };
 
 	RawImage getFrame();
 
@@ -71,31 +71,29 @@ public:
 	void writeParameterValues(VarList* vars);
 
 private:
-	bool is_capturing;
-	bool ignore_capture_failure;
+	bool isGrabbing;
 	Pylon::CBaslerGigEInstantCamera* camera;
-	Pylon::CGrabResultPtr grab_result;
 	Pylon::CImageFormatConverter converter;
-	int current_id;
-  	unsigned char* last_buf;
+	int currentID;
+  	unsigned char* lastBuf;
 
   	VarList* vars;
-  	VarInt* v_camera_id;
-  	VarInt* v_balance_ratio_red;
-  	VarInt* v_balance_ratio_green;
-  	VarInt* v_balance_ratio_blue;
-  	VarBool* v_auto_gain;
-  	VarDouble* v_gain;
-  	VarBool* v_gamma_enable;
-  	VarDouble* v_gamma;
-  	VarDouble* v_black_level;
-  	VarBool* v_auto_exposure;
-  	VarDouble* v_manual_exposure;
-  	VarStringEnum* v_color_mode;
+  	VarInt* vCameraID;
+  	VarInt* vBalanceRatioRed;
+  	VarInt* vBalanceRatioGreen;
+  	VarInt* vBalanceRatioBlue;
+  	VarBool* vAutoGain;
+  	VarDouble* vGain;
+  	VarBool* vEnableGamma;
+  	VarDouble* vGamme;
+  	VarDouble* vBlackLevel;
+  	VarBool* vAutoExposure;
+  	VarDouble* vManualExposure;
+  	VarStringEnum* vColorMode;
 
-  	void resetCamera(unsigned int new_id);
-  	bool _stopCapture();
-  	bool _buildCamera();
+  	void resetCamera(unsigned int newID);
+  	bool stopGrabbing();
+  	bool buildCamera();
 
 // A slight blur helps to reduce noise and improve color recognition.
 #ifdef OPENCV
