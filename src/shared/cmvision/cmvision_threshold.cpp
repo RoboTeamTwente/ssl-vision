@@ -130,9 +130,9 @@ struct Thresholder : public cv::ParallelLoopBody {
 	void operator()(const cv::Range& range) const {
 		const unsigned end = range.end;
 		for (unsigned i = range.start; i < end; ++i) {
-			rgb p=source_pointer[i];
-			target_pointer[i] =  LUT[(((p.r >> X_SHIFT) << Z_AND_Y_BITS) |
-					((p.g >> Y_SHIFT) << Z_BITS) | (p.b >> Z_SHIFT))];
+			const rgb* p = source_pointer + i;
+			target_pointer[i] =  LUT[(((p->r >> X_SHIFT) << Z_AND_Y_BITS) |
+					((p->g >> Y_SHIFT) << Z_BITS) | (p->b >> Z_SHIFT))];
 		}
 	}
 };

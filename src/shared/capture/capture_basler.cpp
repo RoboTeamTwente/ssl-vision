@@ -243,7 +243,7 @@ RawImage CaptureBasler::getFrame() {
 			MUTEX_UNLOCK;
 			return img;
 		}
-		Pylon::CPylonImage capture;
+		static Pylon::CPylonImage capture;
 
 		// Convert to RGB8 format
 		converter.Convert(capture, grabResult);
@@ -251,9 +251,9 @@ RawImage CaptureBasler::getFrame() {
 		// Set the basics, and copy the buffer into the image.
 		img.setWidth(capture.GetWidth());
 		img.setHeight(capture.GetHeight());
-		unsigned char* buf = new unsigned char[capture.GetImageSize()];
-		memcpy(buf, capture.GetBuffer(), capture.GetImageSize());
-		img.setData(buf);
+		//unsigned char* buf = new unsigned char[capture.GetImageSize()];
+		//memcpy(buf, capture.GetBuffer(), capture.GetImageSize());
+		img.setData((unsigned char*) capture.GetBuffer());
 
 		// Optional post-processing:
 #ifdef OPENCV
@@ -267,7 +267,7 @@ RawImage CaptureBasler::getFrame() {
 		lastBuf = img.getData();
 
 		// Original buffer is not needed anymore, it has been copied to img
-		grabResult.Release();
+		//grabResult.Release();
 	} catch (Pylon::GenericException& e) {
 		fprintf(stderr, "Exception while grabbing a frame: %s\n", e.what());
 		MUTEX_UNLOCK;
