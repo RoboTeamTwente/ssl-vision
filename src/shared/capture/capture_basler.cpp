@@ -13,6 +13,7 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/core/core.hpp"
+#include <pylon/ThreadPriority.h>
 
 #ifndef VDATA_NO_QT
 #define MUTEX_LOCK mutex.lock()
@@ -27,6 +28,7 @@ int BaslerInitManager::count = 0;
 void BaslerInitManager::register_capture() {
 	if (count++ == 0) {
 		Pylon::PylonInitialize();
+		Pylon::SetRTThreadPriority(Pylon::GetCurrentThreadHandle(), 60);
 	}
 }
 
@@ -117,6 +119,7 @@ bool CaptureBasler::buildCamera() {
 		camera->PixelFormat.SetValue(Basler_GigECamera::PixelFormat_BayerBG8, true);
         printf("Setting interpacket delay...\n");
 		camera->GevSCPD.SetValue(600);
+		camera->InternalGrabEngineThreadPriorityOverride = 99;
         printf("Done!\n");
 		isGrabbing = true;
 		return true;
@@ -134,7 +137,7 @@ bool CaptureBasler::startCapture() {
                 return false;
             }
 		}
-		camera->StartGrabbing(Pylon::GrabStrategy_LatestImageOnly);
+		camera->StartGrabbing(Pylon::GrabStrategy_OneByOne);
 	} catch (Pylon::GenericException& e) {
         printf("Pylon exception: %s", e.what());
         delete camera;
@@ -213,7 +216,7 @@ RawImage CaptureBasler::getFrame() {
 				&& (!grabResult || !grabResult->GrabSucceeded())) {
 			try {
 				// Get an image, waiting at most 1000 ms, store it in grabResult
-				camera->RetrieveResult(1000, grabResult,
+				camera->RetrieveResult(75, grabResult,
 						Pylon::TimeoutHandling_ThrowException);
 			} catch (Pylon::TimeoutException& e) {
 				fprintf(stderr,
@@ -243,7 +246,7 @@ RawImage CaptureBasler::getFrame() {
 			MUTEX_UNLOCK;
 			return img;
 		}
-		static Pylon::CPylonImage capture;
+		Pylon::CPylonImage capture;
 
 		// Convert to RGB8 format
 		converter.Convert(capture, grabResult);
@@ -251,9 +254,10 @@ RawImage CaptureBasler::getFrame() {
 		// Set the basics, and copy the buffer into the image.
 		img.setWidth(capture.GetWidth());
 		img.setHeight(capture.GetHeight());
-		//unsigned char* buf = new unsigned char[capture.GetImageSize()];
-		//memcpy(buf, capture.GetBuffer(), capture.GetImageSize());
-		img.setData((unsigned char*) capture.GetBuffer());
+		unsigned char* buf = new unsigned char[capture.GetImageSize()];
+		memcpy(buf, capture.GetBuffer(), capture.GetImageSize());
+		//img.setData((unsigned char*) capture.GetBuffer());
+		img.setData(buf);
 
 		// Optional post-processing:
 #ifdef OPENCV
@@ -267,7 +271,7 @@ RawImage CaptureBasler::getFrame() {
 		lastBuf = img.getData();
 
 		// Original buffer is not needed anymore, it has been copied to img
-		//grabResult.Release();
+		grabResult.Release();
 	} catch (Pylon::GenericException& e) {
 		fprintf(stderr, "Exception while grabbing a frame: %s\n", e.what());
 		MUTEX_UNLOCK;
