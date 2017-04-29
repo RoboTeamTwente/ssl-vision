@@ -28,6 +28,8 @@ PluginFindBlobs::PluginFindBlobs(FrameBuffer * _buffer, YUVLUT * _lut, int _max_
 
   _settings=new VarList("Blob Finding");
   _settings->addChild(_v_min_blob_area=new VarInt("min_blob_area", 5));
+  _settings->addChild(_v_max_blob_width=new VarInt("max blob width", 40));
+  _settings->addChild(_v_max_blob_height=new VarInt("max blob height", 40));
   _settings->addChild(_v_enable=new VarBool("enable", true));
 
 }
@@ -70,8 +72,14 @@ ProcessResult PluginFindBlobs::process(FrameData * data, RenderOptions * options
       printf("Warning: extract regions exceeded maximum number of %d regions\n",reglist->getMaxRegions());
     }
   
+    CMVision::BlobLimits limits = {
+    	_v_min_blob_area->getInt(),
+		_v_max_blob_width->getInt(),
+		_v_max_blob_height->getInt()
+    };
+
     //Separate Regions by colors:
-    int max_area = CMVision::RegionProcessing::separateRegions(colorlist, reglist, _v_min_blob_area->getInt());
+    int max_area = CMVision::RegionProcessing::separateRegions(colorlist, reglist, limits);
   
     //Sort Regions:
     CMVision::RegionProcessing::sortRegions(colorlist,max_area);

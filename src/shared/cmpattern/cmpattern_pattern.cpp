@@ -241,7 +241,7 @@ bool MultiPatternModel::loadSinglePatternImage(const yuvImage & image, YUVLUT * 
 
   // run low level vision on the image
 
-  proc.processYUV444(&image,10);
+  proc.processYUV444(&image,{10, 9999, 9999});
 
   CMVision::ColorRegionList * colors = proc.getColorRegionList();
 
