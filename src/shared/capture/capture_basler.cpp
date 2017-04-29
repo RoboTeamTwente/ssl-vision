@@ -24,6 +24,7 @@
 #endif
 
 int BaslerInitManager::count = 0;
+CameraSorter::SerialCheckStatus CameraSorter::serialCheck = TODO;
 
 void BaslerInitManager::register_capture() {
 	if (count++ == 0) {
@@ -103,9 +104,14 @@ CaptureBasler::~CaptureBasler() {
 	vars->deleteAllChildren();
 }
 
+inline void sortCameras(Pylon::DeviceInfoList& devices) {
+	std::sort(devices.begin(), devices.end(), CameraSorter());
+}
+
 bool CaptureBasler::buildCamera() {
 	BaslerInitManager::register_capture();
 	Pylon::DeviceInfoList devices;
+	sortCameras(devices);
 	int amt = Pylon::CTlFactory::GetInstance().EnumerateDevices(devices);
 	currentID = vCameraID->get();
     printf("Current camera id: %d\n", currentID);

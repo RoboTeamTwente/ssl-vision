@@ -28,6 +28,22 @@ private:
 	static int count;
 };
 
+struct CameraSorter {
+	enum SerialCheckStatus { TODO, NO, YES };
+	static enum SerialCheckStatus serialCheck;
+	bool operator()(const Pylon::CDeviceInfo& a, const Pylon::CDeviceInfo& b) {
+		if (serialCheck == TODO) {
+			serialCheck = a.IsSerialNumberAvailable() ? YES : NO;
+			if (serialCheck == NO) {
+				std::cerr << "[Basler] Warning: serial numbers not available. Sorting by possibly non-persistent user-defined names instead.\n";
+			}
+		}
+		if (serialCheck == YES) {
+			return a.GetSerialNumber() < b.GetSerialNumber();
+		}
+		return a.GetUserDefinedName() < b.GetUserDefinedName();
+	}
+};
 
 #ifdef VDATA_NO_QT
 class CaptureBasler: public CaptureInterface
