@@ -116,6 +116,9 @@ bool CaptureBasler::_buildCamera() {
 				Pylon::CTlFactory::GetInstance().CreateDevice(info));
         printf("Opening camera %d...\n", current_id);
 		camera->Open();
+
+		camera->PixelFormat.SetValue(Basler_GigECamera::PixelFormat_BayerBG8, true);
+
         printf("Setting interpacket delay...\n");
 		camera->GevSCPD.SetValue(600);
         printf("Done!\n");
