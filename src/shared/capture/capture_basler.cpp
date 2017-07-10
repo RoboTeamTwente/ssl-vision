@@ -10,9 +10,6 @@
 #include <vector>
 #include <string>
 
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/core/core.hpp"
 #include <pylon/ThreadPriority.h>
 
 #ifndef VDATA_NO_QT
@@ -265,14 +262,6 @@ RawImage CaptureBasler::getFrame() {
 		//img.setData((unsigned char*) capture.GetBuffer());
 		img.setData(buf);
 
-		// Optional post-processing:
-#ifdef OPENCV
-		// equalize(img);
-		// gaussianBlur(img);
-        // contrast(img, 1.6);
-        // sharpen(img);
-#endif
-
 		// Keep a pointer to the new, copied buffer to clear it later.
 		lastBuf = img.getData();
 
@@ -428,48 +417,6 @@ void CaptureBasler::writeParameterValues(VarList* vars) {
 	}
 	MUTEX_UNLOCK;
 }
-
-#ifdef OPENCV
-inline void CaptureBasler::gaussianBlur(RawImage& img) {
-	cv::Mat cv_img(img.getHeight(), img.getWidth(), CV_8UC3, img.getData());
-	cv::GaussianBlur(cv_img, cv_img, cv::Size(), blur_sigma);
-}
-
-void CaptureBasler::contrast(RawImage& img, double factor) {
-	cv::Mat cv_img(img.getHeight(), img.getWidth(), CV_8UC3, img.getData());
-    for (int y = 0; y < cv_img.rows; ++y) {
-        for (int x = 0; x < cv_img.cols; ++x) {
-            for (int i = 0; i < 3; ++i) {
-                uint8_t channel = cv_img.at<cv::Vec3b>(y, x)[i];
-                int newChannel = channel * factor;
-                if (newChannel > 255) newChannel = 255;
-                cv_img.at<cv::Vec3b>(y, x)[i] = newChannel;
-            }
-        }
-    }
-}
-
-void CaptureBasler::sharpen(RawImage& img) {
-	cv::Mat cv_img(img.getHeight(), img.getWidth(), CV_8UC3, img.getData());
-	cv::Mat cv_img_copy = cv_img.clone();
-	cv::GaussianBlur(cv_img_copy, cv_img_copy, cv::Size(), 3);
-    cv::addWeighted(cv_img, 2.5, cv_img_copy, -1.5, 0, cv_img);
-}
-
-void CaptureBasler::equalize(RawImage& img) {
-	cv::Mat original(img.getHeight(), img.getWidth(), CV_8UC3, img.getData());
-	cv::Mat equalized(img.getHeight(), img.getWidth(), CV_8UC3, new signed char[img.getNumBytes()]);
-
-	std::vector<cv::Mat> channels;
-	cv::cvtColor(original, equalized, CV_RGB2YCrCb);
-	cv::split(equalized, channels);
-	cv::equalizeHist(channels[0], channels[0]);
-	cv::merge(channels, equalized);
-	cv::cvtColor(equalized, equalized, CV_YCrCb2RGB);
-	img.setData(equalized.data);
-}
-
-#endif
 
 #ifndef VDATA_NO_QT
 void CaptureBasler::mvc_connect(VarList * group) {
