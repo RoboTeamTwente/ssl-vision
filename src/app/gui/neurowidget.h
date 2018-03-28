@@ -28,7 +28,7 @@
 #include <QToolBar>
 #include <QtGui>
 #include <string>
-#include "ui_neurowidget.h"
+//#include "ui_neurowidget.h"
 
 /**!
   \file    lutwidget.h

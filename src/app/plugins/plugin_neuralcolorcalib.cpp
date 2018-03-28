@@ -30,7 +30,7 @@ const int sizeOutLayer = 10; //Number of neurons on the output layer (also numbe
 
 
 int PluginNeuralColorCalib::TrainNeuralopenCV() {
-    CvANN_MLP_TrainParams netparams;
+    cv::ml::ANN_MLP::TrainParams netparams;
     CvTermCriteria term_crit;
     double * training;
     training= new double [n_samples * sizeInputLayer * sizeInputLayer];

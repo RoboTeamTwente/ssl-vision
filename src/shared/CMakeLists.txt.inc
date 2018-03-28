@@ -1,5 +1,6 @@
 get_filename_component(shared_dir ${CMAKE_CURRENT_LIST_FILE} PATH)
 
+include_directories(${shared_dir}/aruco)
 include_directories(${shared_dir}/capture)
 include_directories(${shared_dir}/cmvision)
 include_directories(${shared_dir}/cmpattern)
@@ -13,6 +14,9 @@ include_directories(${shared_dir}/vartypes/gui)
 include_directories(${shared_dir}/vartypes/xml)
 
 set (SHARED_SRCS
+    ${shared_dir}/aruco/detector.cpp
+    ${shared_dir}/aruco/pos_rot_id.cpp
+
 	${shared_dir}/capture/capturedc1394v2.cpp
 	${shared_dir}/capture/capturev4l.cpp
 	${shared_dir}/capture/capturefromfile.cpp

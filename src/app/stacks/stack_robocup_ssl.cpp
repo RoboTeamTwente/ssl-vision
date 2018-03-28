@@ -19,6 +19,9 @@
 */
 //========================================================================
 #include "stack_robocup_ssl.h"
+#include "PluginDetectAruco.h"
+
+#define ARUCO
 
 StackRoboCupSSL::StackRoboCupSSL(
     RenderOptions * _opts,
@@ -55,9 +58,9 @@ StackRoboCupSSL::StackRoboCupSSL(
   stack.push_back(new PluginDVR(_fb));
 
   stack.push_back(new PluginColorCalibration(_fb,lut_yuv, LUTChannelMode_Numeric));
-#ifdef OPENCV
-  stack.push_back(new PluginNeuralColorCalib(_fb,lut_yuv, LUTChannelMode_Numeric));
-#endif
+//#ifdef OPENCV
+//  stack.push_back(new PluginNeuralColorCalib(_fb,lut_yuv, LUTChannelMode_Numeric));
+//#endif
   settings->addChild(lut_yuv->getSettings());
 
   stack.push_back(new PluginCameraCalibration(_fb,*camera_parameters, *global_field));
@@ -72,8 +75,11 @@ StackRoboCupSSL::StackRoboCupSSL(
   //we don't expect more than 10k blobs per image
   stack.push_back(new PluginFindBlobs(_fb,lut_yuv, 10000));
 
+#ifdef ARUCO
+  stack.push_back(new PluginDetectAruco(_fb,*camera_parameters,*global_field));
+#else
   stack.push_back(new PluginDetectRobots(_fb,lut_yuv,*camera_parameters,*global_field,global_team_selector_blue,global_team_selector_yellow));
-
+#endif
   stack.push_back(new PluginDetectBalls(_fb,lut_yuv,*camera_parameters,*global_field,global_ball_settings));
 
   stack.push_back(new PluginSSLNetworkOutput(
