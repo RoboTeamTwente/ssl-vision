@@ -441,3 +441,19 @@ void CaptureBasler::sharpen(RawImage& img) {
     cv::addWeighted(cv_img, 2.5, cv_img_copy, -1.5, 0, cv_img);
 }
 #endif
+
+#ifndef VDATA_NO_QT
+void CaptureBasler::mvc_connect(VarList * group) {
+	vector<VarType *> v = group->getChildren();
+	for (unsigned int i = 0; i < v.size(); i++) {
+	connect(v[i],SIGNAL(wasEdited(VarType *)),group,SLOT(mvcEditCompleted()));
+}
+connect(group,SIGNAL(wasEdited(VarType *)),this,SLOT(changed(VarType *)));
+}
+
+void CaptureBasler::changed(VarType * group) {
+if (group->getType() == VARTYPE_ID_LIST) {
+writeParameterValues(dynamic_cast<VarList*>(group));
+}
+}
+#endif

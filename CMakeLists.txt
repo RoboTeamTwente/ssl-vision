@@ -1,5 +1,6 @@
 project(ssl-vision)
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.9)
+set(CMAKE_CXX_STANDARD 11)
 
 #defines
 add_definitions(-D UNIX)
@@ -49,13 +50,13 @@ else()
   message(STATUS "mvIMPACT NOT found => BlueFox2 support disabled")
 endif()
 
-find_package( OpenCV 2 QUIET )
+find_package( OpenCV 3 REQUIRED )
 if(OpenCV_FOUND)
   include_directories(${OpenCV_INCLUDE_DIRS})
   add_definitions(-D OPENCV)
-  set (OPTIONAL_SRCS ${OPTIONAL_SRCS} src/app/gui/neurowidget.cpp src/app/plugins/plugin_neuralcolorcalib.cpp)
-  set (OPTIONAL_HEADERS ${OPTIONAL_HEADERS} src/app/gui/neurowidget.h)
-  set (OPTIONAL_UI_SRCS ${OPTIONAL_UI_SRCS} src/app/gui/neurowidget.ui)
+  #set (OPTIONAL_SRCS ${OPTIONAL_SRCS} src/app/gui/neurowidget.cpp src/app/plugins/plugin_neuralcolorcalib.cpp)
+  #set (OPTIONAL_HEADERS ${OPTIONAL_HEADERS} src/app/gui/neurowidget.h)
+  #set (OPTIONAL_UI_SRCS ${OPTIONAL_UI_SRCS} src/app/gui/neurowidget.ui)
   message(STATUS "OpenCV found")
 else()
   message(WARNING "OpenCV NOT found => Neural Calibration not available")
@@ -96,6 +97,7 @@ set (SRCS
 	src/app/plugins/plugin_colorthreshold.cpp
 	src/app/plugins/plugin_detect_balls.cpp
 	src/app/plugins/plugin_detect_robots.cpp
+	src/app/plugins/PluginDetectAruco.cpp
 	src/app/plugins/plugin_find_blobs.cpp
 	src/app/plugins/plugin_publishgeometry.cpp
 	src/app/plugins/plugin_legacypublishgeometry.cpp
@@ -112,7 +114,7 @@ set (SRCS
 	src/app/stacks/visionstack.cpp
 
 	${OPTIONAL_SRCS}
-)
+        src/app/plugins/PluginDetectAruco.cpp src/app/plugins/PluginDetectAruco.h)
 
 qt4_wrap_cpp (MOC_SRCS
 	src/app/capture_thread.h
