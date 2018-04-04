@@ -5,19 +5,19 @@
 #include "detector.h"
 
 
-Detector::Detector(int originID, int limitID) {
-    originMarker = originID;
-    limitMarker = limitID;
+Detector::Detector() {
+//    originMarker = originID;
+//    limitMarker = limitID;
 
     totalTime = 0;
     totalIterations = 0;
 
     // At the start the origin and limit marker are not yet observed. Start with origin at (0,0) and limit at
     // (input video pixel height, input video pixel width)
-    origin = cv::Point2f(0.0f, 0.0f);
-    limit = cv::Point2f((float) 1024, (float) 1280);
-    originRot = cv::Mat::zeros(3, 3, CV_64F);
-    limitRot = cv::Mat::zeros(3, 3, CV_64F);
+//    origin = cv::Point2f(0.0f, 0.0f);
+//    limit = cv::Point2f((float) 1024, (float) 1280);
+//    originRot = cv::Mat::zeros(3, 3, CV_64F);
+//    limitRot = cv::Mat::zeros(3, 3, CV_64F);
 
     // Populate the camera optical parameters. These are unique per camera and should be recalibrated if the camera focus
     // changes
@@ -27,8 +27,8 @@ Detector::Detector(int originID, int limitID) {
     distPtr = cv::makePtr<cv::Mat>();
 
     readCameraParameters(camPtr, distPtr);
-    grid_height = 1024;
-    grid_width = 1280;
+//    grid_height = 1024;
+//    grid_width = 1280;
 
     cameraMatrix = *camPtr;
     distCoeffs = *distPtr;
@@ -65,29 +65,28 @@ std::vector<PosRotId> Detector::performTrackingOnImage(cv::Mat image, bool showD
 
             for (int i = 0; i < markerIds.size(); i++) {
                 int id = markerIds[i];
-                if (id != limitMarker && id != originMarker) {
-                    // Calculate the angle of the marker relative to the origin marker.
-                    // The delta matrix is calculated as follows:
-                    // ~[origin] * [marker]
-                    // Because the camera is perpendicular to the surface we are concerned with the rotation in the
-                    // Z axis. The rotation angle in the z axis can be calculated as the
-                    // atan2 of delta[21] and delta[11]
-                    cv::Mat originInv = originRot.inv(cv::DECOMP_LU);
-                    originInv = originInv * rotMatrices[i];
-                    double elem21 = originInv.at<double>(1, 0);
-                    double elem11 = originInv.at<double>(0, 0);
-                    double angleZ = std::atan2(elem21, elem11);
-                    cv::Point2f pos = calculatePosition(origin, limit, markerCorners[i], angleZ);
-                    PosRotId posRot = PosRotId(id, pos.x, pos.y, angleZ);
-                    result.insert(result.end(), posRot);
+
+                // Calculate the angle of the marker relative to the origin marker.
+                // The delta matrix is calculated as follows:
+                // ~[origin] * [marker]
+                // Because the camera is perpendicular to the surface we are concerned with the rotation in the
+                // Z axis. The rotation angle in the z axis can be calculated as the
+                // atan2 of delta[21] and delta[11]
+
+                cv::Mat originInv = rotMatrices[i];
+                double elem21 = originInv.at<double>(1, 0);
+                double elem11 = originInv.at<double>(0, 0);
+                double angleZ = std::atan2(elem21, elem11);
+                cv::Point2f pos = calculatePosition(markerCorners[i]);
+                PosRotId posRot = PosRotId(id, pos.x, pos.y, angleZ);
+                result.insert(result.end(), posRot);
 
 
-                    if (showDebug) {
-                        std::cout << "Marker " << id << " at " << pos
-                                  << " with rotation " << angleZ << std::endl;
-                    }
-
+                if (showDebug) {
+                    std::cout << "Marker " << id << " at " << pos
+                              << " with rotation " << angleZ << std::endl;
                 }
+
 
             }
             have_detection = true;
@@ -121,8 +120,7 @@ std::vector<PosRotId> Detector::performTrackingOnImage(cv::Mat image, bool showD
 }
 
 cv::Point2f
-Detector::calculatePosition(cv::Point2f origin, cv::Point2f limit, std::vector<cv::Point2f> observedPos,
-                            double angleZ) {
+Detector::calculatePosition(std::vector<cv::Point2f> observedPos) {
     cv::Point2f centerMarker;
 
     // Calculate the center of the marker in camera coordinates
@@ -133,22 +131,17 @@ Detector::calculatePosition(cv::Point2f origin, cv::Point2f limit, std::vector<c
     float centerX = observedPos[0].x + (deltax02 / 2);
     float centerY = observedPos[0].y + (deltay02 / 2);
     cv::Point2f markerCenter = cv::Point2f(centerX, centerY);
-
-    float max_x = std::abs(limit.x - origin.x);
-    float max_y = std::abs(limit.y - origin.y);
-    cv::Point2f deltaOrigin = cv::Point2f(markerCenter.x - origin.x, markerCenter.y - origin.y);
-    centerMarker = cv::Point2f((deltaOrigin.x / max_x) * grid_width,
-                               (-deltaOrigin.y / max_y) * grid_height);
+    return markerCenter;
 
     // We know the center of the marker in surface area coordinates. Now we calculate the center of the surfacebot from
     // this data. We know that the center of the bot lies on the circle with diameter MARKER_OFFSET with origin in the
     // center of the marker. To calculate the x and y position on this circle we use the cosinus and sinus functions
     // respectively;
-
-    double centerBotx = centerMarker.x + std::cos(angleZ + M_PI) * SURFBOTTRACKING_MARKER_OFFSET;
-    double centerBoty = centerMarker.y + std::sin(angleZ + M_PI) * SURFBOTTRACKING_MARKER_OFFSET;
-
-    return cv::Point2f((float) centerBotx, (float) centerBoty);
+//
+//    double centerBotx = centerMarker.x + std::cos(angleZ + M_PI) * SURFBOTTRACKING_MARKER_OFFSET;
+//    double centerBoty = centerMarker.y + std::sin(angleZ + M_PI) * SURFBOTTRACKING_MARKER_OFFSET;
+//
+//    return cv::Point2f((float) centerBotx, (float) centerBoty);
 }
 
 

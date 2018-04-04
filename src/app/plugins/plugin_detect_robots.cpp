@@ -145,8 +145,13 @@ ProcessResult PluginDetectRobots::process(FrameData * data, RenderOptions * opti
       _notifier.changeSlotOtherChange();
     }
 
-//    printf("DETECTED %d robots on team %d\n",robotlist->size(),team_i);
-//    fflush(stdout);
+    printf("DETECTED %d robots on team %d\n",robotlist->size(),team_i);
+      for (int i = 0; i < robotlist->size(); i++) {
+          auto robot = (*robotlist)[i];
+          printf("id: %d, x: %f, y: %f, z: %f\n", robot.robot_id(), robot.x(), robot.y(), robot.orientation());
+      }
+      printf("\n--------------------------\n");
+    fflush(stdout);
   }
   return ProcessingOk;
 

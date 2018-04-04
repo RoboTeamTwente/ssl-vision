@@ -10,9 +10,11 @@
 PluginDetectAruco::PluginDetectAruco(FrameBuffer * _buffer, const CameraParameters& camera_params, const RoboCupField& field)
         : VisionPlugin(_buffer), camera_parameters(camera_params), field(field)
 {
-    detector = new Detector(0,1);
+    detector = new Detector();
 
     _settings = new VarList("Robot Aruco Detection");
+
+    ;
 
 }
 
@@ -36,6 +38,7 @@ ProcessResult PluginDetectAruco::process(FrameData *data, RenderOptions *options
 
 
 
+
     vector<PosRotId> results = detector->performTrackingOnImage(cv::Mat(
             data->video.getHeight(),
             data->video.getWidth(),
@@ -48,6 +51,10 @@ ProcessResult PluginDetectAruco::process(FrameData *data, RenderOptions *options
     auto robots_yellow = detection_frame->mutable_robots_yellow();
     for (PosRotId pri : results)
     {
+        vector2d reg_img_center(pri.getX(),pri.getY());
+        vector3d reg_center3d;
+        camera_parameters.image2field(reg_center3d,reg_img_center,140.0);
+        vector2d reg_center(reg_center3d.x,reg_center3d.y);
         SSL_DetectionRobot*  robot = 0;
         if(pri.getID() >= 16) {
             robot = robots_blue->Add();
@@ -56,18 +63,21 @@ ProcessResult PluginDetectAruco::process(FrameData *data, RenderOptions *options
             robot = robots_yellow->Add();
             robot->set_robot_id((unsigned int)pri.getID());
         }
-        robot->set_x((float)pri.getX());
-        robot->set_y((float)pri.getY());
+        robot->set_x((float)reg_center.x);
+        robot->set_y((float)reg_center.y);
         robot->set_confidence(1);
-        robot->set_orientation((float)pri.getTheta());
+        robot->set_orientation((float)-(pri.getTheta() - .5*CV_PI));
+        if (robot->orientation() > (float)CV_PI) robot->set_orientation((robot->orientation()-(2*CV_PI)));
         robot->set_height(0);
         robot->set_pixel_x((float)pri.getX());
         robot->set_pixel_y((float)pri.getY());
 #ifdef DEBUG
-        std::cout << "Detected robot " << robot->robot_id() << " at (" << robot->x() << ", " << robot->y() << ");" << endl;
+        std::cout << "Detected robot " << robot->robot_id() << " at (" << robot->x() << ", " << robot->y() << ", " << robot->orientation() << ");" << endl;
 #endif
     }
-
+#ifdef DEBUG
+    std::cout << endl << "-----------------------" << endl;
+#endif
     return ProcessingOk;
 
 

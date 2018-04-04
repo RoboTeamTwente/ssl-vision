@@ -14,6 +14,7 @@
 class PluginDetectAruco
 : public VisionPlugin {
 protected:
+
     VarNotifier _notifier;
     VarList * _settings;
 

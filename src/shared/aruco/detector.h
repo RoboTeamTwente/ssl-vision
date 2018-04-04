@@ -20,7 +20,8 @@ class Detector {
 
 public:
 	/// these values store the play area size
-    int grid_width, grid_height;
+    //int grid_width, grid_height;
+
     /// Initialise the tracker. A tracker can locate the location and rotation of markers on a flat surface.
     /// Two markers serve as boundaries for the area, the origin and the limit. The origin serves as point 0,0 and the
     /// limit as point RESULOTION,RESOLUTION e.g. 1000,1000. The rotation that performTracking returns is relative to
@@ -28,7 +29,7 @@ public:
     /// \param originID id of marker that serves as origin.
     /// \param limitID id of marker that serves as limit.
     /// \param camId the OpenCV camera id to use for the tracking
-    explicit Detector(int originID, int limitID);
+    explicit Detector();
 
 
     /// Performs the tracking and return the PosRots in a vector. Performs the tracking for one frame of the input device.
@@ -39,7 +40,6 @@ public:
 
     std::vector<PosRotId> performTrackingOnImage(cv::Mat image, bool showDebug);
 private:
-    int originMarker, limitMarker;
     
 
     /// Transforms the observed marker position camera coordinate to a coordinate relative to origin and limit.
@@ -49,7 +49,7 @@ private:
     /// \param observedPos the observed positions of the corners of a marker in camera coordinates.
     /// \return the position relative to origin and limit of the observed marker.
     cv::Point2f
-    calculatePosition(cv::Point2f origin, cv::Point2f limit, std::vector<cv::Point2f> observedPos, double angleZ);
+    calculatePosition(std::vector<cv::Point2f> observedPos);
 
     /// Fills cameraMatrix and distCoeffs with values. These values should come from the camera calibration performed
     /// with charuco boards.
@@ -67,10 +67,10 @@ private:
     double totalTime;
     int totalIterations;
 
-    cv::Point2f origin;
-    cv::Point2f limit;
-    cv::Mat originRot;
-    cv::Mat limitRot;
+//    cv::Point2f origin;
+//    cv::Point2f limit;
+//    cv::Mat originRot;
+//    cv::Mat limitRot;
 
     cv::Mat cameraMatrix, distCoeffs;
     cv::Ptr<cv::aruco::Dictionary> dictionary = cv::aruco::Dictionary::create(20,3);

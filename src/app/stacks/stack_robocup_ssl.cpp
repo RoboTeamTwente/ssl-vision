@@ -77,6 +77,8 @@ StackRoboCupSSL::StackRoboCupSSL(
 
 #ifdef ARUCO
   stack.push_back(new PluginDetectAruco(_fb,*camera_parameters,*global_field));
+    stack.push_back(new PluginDetectRobots(_fb,lut_yuv,*camera_parameters,*global_field,global_team_selector_blue,global_team_selector_yellow));
+
 #else
   stack.push_back(new PluginDetectRobots(_fb,lut_yuv,*camera_parameters,*global_field,global_team_selector_blue,global_team_selector_yellow));
 #endif
