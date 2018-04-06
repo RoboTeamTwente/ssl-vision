@@ -78,7 +78,7 @@ CaptureBasler::CaptureBasler(VarList* _settings, QObject* parent) :
 	v_gamma_enable = new VarBool("enable gamma correction", false);
 	vars->addChild(v_gamma_enable);
 
-	v_gamma = new VarDouble("gamma", 0.5, 0, 1);
+	v_gamma = new VarDouble("gamma", 0.5, 0, 3.9);
 	vars->addChild(v_gamma);
 
 	v_black_level = new VarDouble("black level", 64, 0, 1000);
