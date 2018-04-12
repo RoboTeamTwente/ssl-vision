@@ -25,7 +25,6 @@
 #include "capturefromfile.h"
 #include "capturev4l.h"
 #include "capture_generator.h"
-#include "capture_basler.h"
 #include <QThread>
 #include "ringbuffer.h"
 #include "framedata.h"
@@ -33,6 +32,10 @@
 #include "visionstack.h"
 #include "capturestats.h"
 #include "affinity_manager.h"
+
+#ifdef PYLON5
+#include "capture_basler.h"
+#endif
 
 #ifdef MVIMPACT
 #include "capture_bluefox2.h"

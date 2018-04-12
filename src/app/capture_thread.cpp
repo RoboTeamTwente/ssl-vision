@@ -39,12 +39,12 @@ CaptureThread::CaptureThread(int cam_id)
   captureModule->addItem("Video 4 Linux");
   captureModule->addItem("Read from files");
   captureModule->addItem("Generator");
-  captureModule->addItem("Basler GigE");
+
   settings->addChild( (VarType*) (dc1394 = new VarList("DC1394")));
   settings->addChild( (VarType*) (v4l = new VarList("Video 4 Linux")));
   settings->addChild( (VarType*) (fromfile = new VarList("Read from files")));
   settings->addChild( (VarType*) (generator = new VarList("Generator")));
-  settings->addChild( (VarType*) (basler = new VarList("Basler GigE")));
+
   settings->addFlags( VARTYPE_FLAG_AUTO_EXPAND_TREE );
   c_stop->addFlags( VARTYPE_FLAG_READONLY );
   c_refresh->addFlags( VARTYPE_FLAG_READONLY );
@@ -60,8 +60,15 @@ CaptureThread::CaptureThread(int cam_id)
   captureFiles = new CaptureFromFile(fromfile);
   captureGenerator = new CaptureGenerator(generator);
   captureV4L = new CaptureV4L(v4l,camId);
+
+
+#ifdef PYLON5
+  captureModule->addItem("Basler GigE");
+  settings->addChild( (VarType*) (basler = new VarList("Basler GigE")));
   captureBasler = new CaptureBasler(basler);
-  
+#endif
+
+
 #ifdef MVIMPACT
   captureModule->addItem("BlueFox2");
   settings->addChild( (VarType*) (bluefox2 = new VarList("BlueFox2")));

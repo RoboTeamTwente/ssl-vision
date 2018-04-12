@@ -48,6 +48,7 @@ PluginDetectRobots::PluginDetectRobots(FrameBuffer * _buffer, LUT3D * lut, const
   team_detector_yellow=new CMPattern::TeamDetector(_lut,camera_params,field);
 
   _settings=new VarList("Robot Detection");
+  _settings->addChild(new VarBool("Enabled", true));
   _notifier.addRecursive(_settings);
   connect(_global_team_selector_blue,SIGNAL(signalTeamDataChanged()),&_notifier,SLOT(changeSlotOtherChange()));
   connect(_global_team_selector_yellow,SIGNAL(signalTeamDataChanged()),&_notifier,SLOT(changeSlotOtherChange()));
@@ -87,6 +88,15 @@ ProcessResult PluginDetectRobots::process(FrameData * data, RenderOptions * opti
   (void)options;
   if (data==0) return ProcessingFailed;
 
+  bool need_reinit=_notifier.hasChanged();
+  if (need_reinit) {
+    is_enabled = ((VarBool*)_settings->findChild("Enabled"))->getBool();
+  }
+
+  if (!is_enabled) {
+    return ProcessingFailed;
+  }
+
   SSL_DetectionFrame * detection_frame = 0;
 
   detection_frame=(SSL_DetectionFrame *)data->map.get("ssl_detection_frame");
@@ -116,7 +126,7 @@ ProcessResult PluginDetectRobots::process(FrameData * data, RenderOptions * opti
   //TODO: lookup color label from LUT
 
   buildRegionTree(colorlist);
-  bool need_reinit=_notifier.hasChanged();
+
 
   for (int team_i = 0; team_i < 2; team_i++) {
     //team_i: 0==blue, 1==yellow

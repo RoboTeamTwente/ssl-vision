@@ -40,6 +40,7 @@ friend class PluginDetectBalls;
 protected:
   VarList * _settings;
 
+    VarBool * _enabled;
   VarInt    * _max_balls;
   VarString * _color_label;
   VarList   * _filter_general;
@@ -73,6 +74,7 @@ public:
   PluginDetectBallsSettings() {
 
   _settings=new VarList("Ball Detection");
+
 
   _settings->addChild(_max_balls = new VarInt("Max Ball Count",10));
   _settings->addChild(_color_label = new VarString("Ball Color","Orange"));

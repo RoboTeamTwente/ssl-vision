@@ -2,12 +2,14 @@
 // Created by Wouter Timmermans on 14-09-17.
 //
 
-#include "detector.h"
+#include "aruco_detector.h"
 
 
-Detector::Detector() {
+ArucoDetector::ArucoDetector(int total_markers, int bits) {
 //    originMarker = originID;
 //    limitMarker = limitID;
+
+    setDictionaryProperties(total_markers, bits);
 
     totalTime = 0;
     totalIterations = 0;
@@ -35,7 +37,7 @@ Detector::Detector() {
 }
 
 
-std::vector<PosRotId> Detector::performTrackingOnImage(cv::Mat image, bool showDebug) {
+std::vector<PosRotId> ArucoDetector::performTrackingOnImage(cv::Mat image, bool showDebug) {
     bool have_detection = false;
 
     std::vector<PosRotId> result = std::vector<PosRotId>();
@@ -120,7 +122,7 @@ std::vector<PosRotId> Detector::performTrackingOnImage(cv::Mat image, bool showD
 }
 
 cv::Point2f
-Detector::calculatePosition(std::vector<cv::Point2f> observedPos) {
+ArucoDetector::calculatePosition(std::vector<cv::Point2f> observedPos) {
     cv::Point2f centerMarker;
 
     // Calculate the center of the marker in camera coordinates
@@ -145,7 +147,7 @@ Detector::calculatePosition(std::vector<cv::Point2f> observedPos) {
 }
 
 
-void Detector::readCameraParameters(cv::Ptr<cv::Mat> cameraMatrix, cv::Ptr<cv::Mat> distCoeffs) {
+void ArucoDetector::readCameraParameters(cv::Ptr<cv::Mat> cameraMatrix, cv::Ptr<cv::Mat> distCoeffs) {
     //TODO: read these paramaters from a file
     double distArr[] = {9.5686687275345381e+00, -1.8804675146136326e+03,
                         -2.5789485772390600e-02, -2.9655936673541709e-02,
@@ -159,12 +161,12 @@ void Detector::readCameraParameters(cv::Ptr<cv::Mat> cameraMatrix, cv::Ptr<cv::M
     *distCoeffs = distMat;
 }
 
-double Detector::euclideanDist(cv::Point2f a, cv::Point2f b) {
+double ArucoDetector::euclideanDist(cv::Point2f a, cv::Point2f b) {
     cv::Point2f diff = a - b;
     return cv::sqrt(diff.x * diff.x + diff.y * diff.y);
 }
 
-double Detector::getAvgRes(std::vector<cv::Point2f> corners) {
+double ArucoDetector::getAvgRes(std::vector<cv::Point2f> corners) {
     double res = 0.0;
     if (!corners.empty() && corners.size() > 1) {
         double total = 0.0;
@@ -175,4 +177,9 @@ double Detector::getAvgRes(std::vector<cv::Point2f> corners) {
         res = total / corners.size();
     }
     return res;
+}
+
+void ArucoDetector::setDictionaryProperties(int total_markers, int bits) {
+    dictionary = cv::aruco::Dictionary::create(total_markers, bits);
+
 }

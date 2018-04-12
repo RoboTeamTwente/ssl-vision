@@ -19,9 +19,7 @@
 */
 //========================================================================
 #include "stack_robocup_ssl.h"
-#include "PluginDetectAruco.h"
 
-#define ARUCO
 
 StackRoboCupSSL::StackRoboCupSSL(
     RenderOptions * _opts,
@@ -75,11 +73,13 @@ StackRoboCupSSL::StackRoboCupSSL(
   //we don't expect more than 10k blobs per image
   stack.push_back(new PluginFindBlobs(_fb,lut_yuv, 10000));
 
-#ifdef ARUCO
-  stack.push_back(new PluginDetectAruco(_fb,*camera_parameters,*global_field));
-#else
+
   stack.push_back(new PluginDetectRobots(_fb,lut_yuv,*camera_parameters,*global_field,global_team_selector_blue,global_team_selector_yellow));
+
+#ifdef ARUCO
+  stack.push_back(new plugin_detect_aruco(_fb,*camera_parameters,*global_field));
 #endif
+
   stack.push_back(new PluginDetectBalls(_fb,lut_yuv,*camera_parameters,*global_field,global_ball_settings));
 
   stack.push_back(new PluginSSLNetworkOutput(

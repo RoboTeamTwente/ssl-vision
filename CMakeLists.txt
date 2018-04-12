@@ -1,11 +1,12 @@
 project(ssl-vision)
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.5)
 set(CMAKE_CXX_STANDARD 11)
 
 #defines
 add_definitions(-D UNIX)
 add_definitions(-D LINUX)
 add_definitions(-D _GNU_SOURCE)
+
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
@@ -36,7 +37,7 @@ include_directories(
 include ( ${QT_USE_FILE} )
 
 find_package(mvIMPACT QUIET)
-find_package(Pylon5 REQUIRED)
+find_package(Pylon5)
 
 include(src/shared/CMakeLists.txt.inc)
 
@@ -50,7 +51,8 @@ else()
   message(STATUS "mvIMPACT NOT found => BlueFox2 support disabled")
 endif()
 
-find_package( OpenCV 3 REQUIRED )
+
+find_package( OpenCV 3 COMPONENTS aruco QUIET )
 if(OpenCV_FOUND)
   include_directories(${OpenCV_INCLUDE_DIRS})
   add_definitions(-D OPENCV)
@@ -59,7 +61,17 @@ if(OpenCV_FOUND)
   #set (OPTIONAL_UI_SRCS ${OPTIONAL_UI_SRCS} src/app/gui/neurowidget.ui)
   message(STATUS "OpenCV found")
 else()
-  message(WARNING "OpenCV NOT found => Neural Calibration not available")
+  message(WARNING "No correct OpenCV found")
+endif()
+
+if(OpenCV_aruco_FOUND)
+	add_definitions(-D CMAKE_BUILD_TYPE=DEBUG)
+    add_definitions(-D ARUCO)
+	set(SHARED_SRCS ${SHARED_SRCS} ${shared_dir}/aruco/aruco_detector.cpp ${shared_dir}/aruco/pos_rot_id.cpp src/app/plugins/plugin_detect_aruco.cpp )
+	set(SHARED_HEADERS ${SHARED_HEADERS} ${shared_dir}/aruco/aruco_detector.h ${shared_dir}/aruco/pos_rot_id.h src/app/plugins/plugin_detect_aruco.h )
+    message(STATUS "ARUCO found")
+else()
+    message(WARNING "No ARUCO found")
 endif()
 
 if(PYLON5_FOUND)
@@ -97,7 +109,6 @@ set (SRCS
 	src/app/plugins/plugin_colorthreshold.cpp
 	src/app/plugins/plugin_detect_balls.cpp
 	src/app/plugins/plugin_detect_robots.cpp
-	src/app/plugins/PluginDetectAruco.cpp
 	src/app/plugins/plugin_find_blobs.cpp
 	src/app/plugins/plugin_publishgeometry.cpp
 	src/app/plugins/plugin_legacypublishgeometry.cpp
@@ -114,7 +125,7 @@ set (SRCS
 	src/app/stacks/visionstack.cpp
 
 	${OPTIONAL_SRCS}
-        src/app/plugins/PluginDetectAruco.cpp src/app/plugins/PluginDetectAruco.h)
+        )
 
 qt4_wrap_cpp (MOC_SRCS
 	src/app/capture_thread.h
@@ -248,11 +259,3 @@ add_executable(${gclient} ${GCLIENT_MOC_SRCS}
 )
 target_link_libraries(${gclient} ${libs})
 
-add_executable(baslerGrab src/basler-test/Grab.cpp)
-target_link_libraries(baslerGrab ${libs})
-
-add_executable(params src/basler-test/Params.cpp)
-target_link_libraries(params ${libs})
-
-add_executable(barebones src/basler-test/Barebones.cpp)
-target_link_libraries(barebones ${libs})

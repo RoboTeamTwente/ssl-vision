@@ -41,6 +41,7 @@ protected:
   VarNotifier _notifier;
   LUT3D * _lut;
   VarList * _settings;
+  bool is_enabled = true;
 
   VarString * _color_label;
   //TeamDetector * 

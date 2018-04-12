@@ -42,6 +42,10 @@
 #include "cmpattern_teamdetector.h"
 #include "robocup_ssl_server.h"
 
+#ifdef ARUCO
+#include "plugin_detect_aruco.h"
+#endif
+
 //#ifdef OPENCV
 //#include "plugin_neuralcolorcalib.h"
 //#endif

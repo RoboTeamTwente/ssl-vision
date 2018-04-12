@@ -2,33 +2,47 @@
 // Created by wouter on 3/26/18.
 //
 
-#include <messages_robocup_ssl_detection.pb.h>
-#include "PluginDetectAruco.h"
 
-#define DEBUG
+#include "plugin_detect_aruco.h"
 
-PluginDetectAruco::PluginDetectAruco(FrameBuffer * _buffer, const CameraParameters& camera_params, const RoboCupField& field)
+plugin_detect_aruco::plugin_detect_aruco(FrameBuffer * _buffer, const CameraParameters& camera_params, const RoboCupField& field)
         : VisionPlugin(_buffer), camera_parameters(camera_params), field(field)
 {
-    detector = new Detector();
 
-    _settings = new VarList("Robot Aruco Detection");
 
-    ;
+    _settings = new plugin_detect_aruco_settings();
+    _notifier.addRecursive(_settings->getSettings());
+
+    _enabled = _settings->isEnabled->getBool();
+    _marker_bits = _settings->marker_bits->getInt();
+    _total_markers = _settings->total_markers->getInt();
+    _markers_per_team = _settings->markers_per_team->getInt();
+    detector = new ArucoDetector(_total_markers, _marker_bits);
 
 }
 
-string PluginDetectAruco::getName() {
+string plugin_detect_aruco::getName() {
     return "DetectArucoRobots";
 }
 
-VarList *PluginDetectAruco::getSettings() {
-    return _settings;
+VarList *plugin_detect_aruco::getSettings() {
+    return _settings->getSettings();
 }
 
-ProcessResult PluginDetectAruco::process(FrameData *data, RenderOptions *options) {
+ProcessResult plugin_detect_aruco::process(FrameData *data, RenderOptions *options) {
     (void)options;
     if (data==0) return ProcessingFailed;
+
+    if (_notifier.hasChanged()) {
+        _enabled = _settings->isEnabled->getBool();
+        _marker_bits = _settings->marker_bits->getInt();
+        _total_markers = _settings->total_markers->getInt();
+        _markers_per_team = _settings->markers_per_team->getInt();
+
+    }
+    if (!_enabled) {
+        return ProcessingOk;
+    }
 
     SSL_DetectionFrame * detection_frame = 0;
 
@@ -83,11 +97,11 @@ ProcessResult PluginDetectAruco::process(FrameData *data, RenderOptions *options
 
 }
 
-PluginDetectAruco::~PluginDetectAruco() {
+plugin_detect_aruco::~plugin_detect_aruco() {
 
 }
 
-void PluginDetectAruco::postProcess(FrameData *data, RenderOptions *options) {
+void plugin_detect_aruco::postProcess(FrameData *data, RenderOptions *options) {
     VisionPlugin::postProcess(data, options);
 }
 

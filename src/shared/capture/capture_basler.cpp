@@ -10,9 +10,11 @@
 #include <vector>
 #include <string>
 
+#ifdef OPENCV
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/core/core.hpp"
+#endif
 
 #ifndef VDATA_NO_QT
 #define MUTEX_LOCK mutex.lock()
@@ -193,6 +195,7 @@ void CaptureBasler::releaseFrame() {
 	MUTEX_UNLOCK;
 }
 
+#ifdef OPENCV
 void write_img(const RawImage& img, const std::string& name) {
 	std::vector<int> params;
 	params.push_back(CV_IMWRITE_PNG_COMPRESSION);
@@ -201,6 +204,7 @@ void write_img(const RawImage& img, const std::string& name) {
 			img.getData());
 	cv::imwrite(name + ".png", cv_img, params);
 }
+#endif
 
 RawImage CaptureBasler::getFrame() {
 	MUTEX_LOCK;

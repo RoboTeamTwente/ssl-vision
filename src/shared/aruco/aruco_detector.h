@@ -12,15 +12,9 @@
 #include <cmath>
 #include "pos_rot_id.h"
 
-#define SURFBOTTRACKING_MARKER_SIZE 5.0// the size of the origin and limit marker in cm
-#define SURFBOTTRACKING_MARKER_OFFSET 7.5 // Offset of the center of the marker from the center of the surfacebot in cm.
-
-
-class Detector {
+class ArucoDetector {
 
 public:
-	/// these values store the play area size
-    //int grid_width, grid_height;
 
     /// Initialise the tracker. A tracker can locate the location and rotation of markers on a flat surface.
     /// Two markers serve as boundaries for the area, the origin and the limit. The origin serves as point 0,0 and the
@@ -29,7 +23,7 @@ public:
     /// \param originID id of marker that serves as origin.
     /// \param limitID id of marker that serves as limit.
     /// \param camId the OpenCV camera id to use for the tracking
-    explicit Detector();
+    explicit ArucoDetector(int total_markers, int bits);
 
 
     /// Performs the tracking and return the PosRots in a vector. Performs the tracking for one frame of the input device.
@@ -39,6 +33,7 @@ public:
 
 
     std::vector<PosRotId> performTrackingOnImage(cv::Mat image, bool showDebug);
+    void setDictionaryProperties(int total_markers, int bits);
 private:
     
 
