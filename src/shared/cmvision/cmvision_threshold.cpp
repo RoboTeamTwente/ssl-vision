@@ -19,10 +19,13 @@
            Some Code Restructuring, and data structure changes: Stefan Zickler 2008
 */
 //========================================================================
-#include "cmvision_threshold.h"
 
+
+#include "cmvision_threshold.h"
+unsigned int CMVisionThreshold::thread_count(1);
 CMVisionThreshold::CMVisionThreshold()
 {
+  setThreads(1);
 }
 
 
@@ -66,18 +69,44 @@ bool CMVisionThreshold::thresholdImageYUV422_UYVY(Image<raw8> * target, const Ra
   int Z_SHIFT=lut->Z_SHIFT;
   int Z_AND_Y_BITS=lut->Z_AND_Y_BITS;
   int Z_BITS = lut->Z_BITS;
+
+  std::thread threads[thread_count];
+  unsigned int workload = (target_size/thread_count);
+  unsigned int remainder = target_size % thread_count;
+  for (unsigned int i = 0; i < thread_count; i++) {
+    unsigned int start = workload*i;
+    unsigned int end = start+workload + (i == thread_count-1 ? remainder : 0);
+    threads[i] = std::thread(thresholdImageYUV422_UYVYWorker, LUT, X_SHIFT, Y_SHIFT, Z_SHIFT, Z_AND_Y_BITS, Z_BITS, source_pointer, target_pointer, start, end);
+  }
+  for (unsigned int i = 0; i < thread_count; i++) {
+    threads[i].join();
+  }
+  lut->unlock();
+  //printf("time: %f\n",t.time());
+  return true;
+}
+
+void CMVisionThreshold::thresholdImageYUV422_UYVYWorker(lut_mask_t *LUT, int X_SHIFT, int Y_SHIFT, int Z_SHIFT,
+                                                        int Z_AND_Y_BITS, int Z_BITS, uyvy *source_pointer,
+                                                        raw8 *target_pointer, unsigned int start, unsigned int end) {
+  if (start%2 == 1) {
+    start+=1;
+  }
+  if (end%2 == 1) {
+    end+=1;
+  }
   uyvy p;
-  for (unsigned int i=0;i<target_size;i+=2) {
+  for (unsigned int i=start;i<end;i+=2) {
     p=source_pointer[(i >> 0x01)];
     register int B=((p.u >> Y_SHIFT) << Z_BITS);
     register int C=(p.v >> Z_SHIFT);
     target_pointer[i] =  LUT[(((p.y1 >> X_SHIFT) << Z_AND_Y_BITS) | B | C)];
     target_pointer[i+1] =  LUT[(((p.y2 >> X_SHIFT) << Z_AND_Y_BITS) | B | C)];
   }
-  lut->unlock();
-  //printf("time: %f\n",t.time());
-  return true;
+
 }
+
+
 
 bool CMVisionThreshold::thresholdImageYUV444(Image<raw8> * target, const ImageInterface * source, YUVLUT * lut) {
   if (source->getColorFormat()!=COLOR_YUV444) {
@@ -102,14 +131,31 @@ bool CMVisionThreshold::thresholdImageYUV444(Image<raw8> * target, const ImageIn
   int Z_SHIFT=lut->Z_SHIFT;
   int Z_AND_Y_BITS=lut->Z_AND_Y_BITS;
   int Z_BITS = lut->Z_BITS;
-  yuv p;
-  for (unsigned int i=0;i<target_size;i++) {
-    p=source_pointer[i];
-    target_pointer[i] =  LUT[(((p.y >> X_SHIFT) << Z_AND_Y_BITS) | ((p.u >> Y_SHIFT) << Z_BITS) | (p.v >> Z_SHIFT))];
+  std::thread threads[thread_count];
+  unsigned int workload = (target_size/thread_count);
+  unsigned int remainder = target_size % thread_count;
+  for (unsigned int i = 0; i < thread_count; i++) {
+    unsigned int start = workload*i;
+    unsigned int end = start+workload + (i == thread_count-1 ? remainder : 0);
+    threads[i] = std::thread(thresholdImageYUV444Worker, LUT, X_SHIFT, Y_SHIFT, Z_SHIFT, Z_AND_Y_BITS, Z_BITS, source_pointer, target_pointer, start, end);
+  }
+  for (unsigned int i = 0; i < thread_count; i++) {
+    threads[i].join();
   }
   lut->unlock();
 
   return true;
+}
+
+void CMVisionThreshold::thresholdImageYUV444Worker(lut_mask_t *LUT, int X_SHIFT, int Y_SHIFT, int Z_SHIFT,
+                                                        int Z_AND_Y_BITS, int Z_BITS, yuv *source_pointer,
+                                                        raw8 *target_pointer, unsigned int start, unsigned int end) {
+  yuv p;
+  for (unsigned int i=start;i<end;i++) {
+    p=source_pointer[i];
+    target_pointer[i] =  LUT[(((p.y >> X_SHIFT) << Z_AND_Y_BITS) | ((p.u >> Y_SHIFT) << Z_BITS) | (p.v >> Z_SHIFT))];
+  }
+
 }
 
 
@@ -135,12 +181,30 @@ bool CMVisionThreshold::thresholdImageRGB(Image<raw8> * target, const ImageInter
   int Z_SHIFT=lut->Z_SHIFT;
   int Z_AND_Y_BITS=lut->Z_AND_Y_BITS;
   int Z_BITS = lut->Z_BITS;
-  for (int i=0;i<source_size;i++) {
+  std::thread threads[thread_count];
+  unsigned int workload = (source_size/thread_count);
+  unsigned int remainder = source_size % thread_count;
+  for (unsigned int i = 0; i < thread_count; i++) {
+    unsigned int start = workload*i;
+    unsigned int end = start+workload + (i == thread_count-1 ? remainder : 0);
+    threads[i] = std::thread(thresholdImageRGBWorker, LUT, X_SHIFT, Y_SHIFT, Z_SHIFT, Z_AND_Y_BITS, Z_BITS, source_pointer, target_pointer, start, end);
+  }
+  for (unsigned int i = 0; i < thread_count; i++) {
+    threads[i].join();
+  }
+
+  return true;
+}
+
+void CMVisionThreshold::thresholdImageRGBWorker(lut_mask_t *LUT, int X_SHIFT, int Y_SHIFT, int Z_SHIFT,
+                                                   int Z_AND_Y_BITS, int Z_BITS, rgb *source_pointer,
+                                                   raw8 *target_pointer, unsigned int start, unsigned int end) {
+  rgb p;
+  for (unsigned int i=start;i<end;i++) {
     rgb p=source_pointer[i];
     target_pointer[i] =  LUT[(((p.r >> X_SHIFT) << Z_AND_Y_BITS) | ((p.g >> Y_SHIFT) << Z_BITS) | (p.b >> Z_SHIFT))];
   }
 
-  return true;
 }
 
 //static void thresholdImage(Image * target, const Image<yuv> * source, const YUVLUT * lut);

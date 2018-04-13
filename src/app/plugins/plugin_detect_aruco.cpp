@@ -52,12 +52,15 @@ ProcessResult plugin_detect_aruco::process(FrameData *data, RenderOptions *optio
 
 
 
-
-    vector<PosRotId> results = detector->performTrackingOnImage(cv::Mat(
+    cv::Mat img = cv::Mat(
             data->video.getHeight(),
             data->video.getWidth(),
             CV_8UC3,
-            data->video.getData()), false);
+            data->video.getData());
+
+    cv::cvtColor(img,img,cv::COLOR_RGB2GRAY);
+    cv::threshold(img,img,127,255,cv::THRESH_BINARY);
+    vector<PosRotId> results = detector->performTrackingOnImage(img, false);
     detection_frame->clear_robots_blue();
     detection_frame->clear_robots_yellow();
 

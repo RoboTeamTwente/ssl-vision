@@ -51,8 +51,8 @@ else()
   message(STATUS "mvIMPACT NOT found => BlueFox2 support disabled")
 endif()
 
-
-find_package( OpenCV 3 COMPONENTS aruco QUIET )
+set (OpenCV_DIR /usr/share/opencv)
+find_package( OpenCV 3 COMPONENTS aruco REQUIRED )
 if(OpenCV_FOUND)
   include_directories(${OpenCV_INCLUDE_DIRS})
   add_definitions(-D OPENCV)

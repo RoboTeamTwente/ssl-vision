@@ -24,6 +24,11 @@ PluginColorThreshold::PluginColorThreshold(FrameBuffer * _buffer, YUVLUT * _lut)
  : VisionPlugin(_buffer)
 {
   lut=_lut;
+
+  _settings = new VarList("Thresholding");
+  _settings->addChild(new VarInt("Threads", 1, 1, 128));
+
+  _notifier.addRecursive(_settings);
 }
 
 
@@ -37,6 +42,10 @@ ProcessResult PluginColorThreshold::process(FrameData * data, RenderOptions * op
   (void)options;
   
   Image<raw8> * img_thresholded;
+  if (_notifier.hasChanged()) {
+    thread_count = ((VarInt *)_settings->findChild("Threads"))->getInt();
+    CMVisionThreshold::setThreads(thread_count);
+  }
   
   if ((img_thresholded=(Image<raw8> *)data->map.get("cmv_threshold")) == 0) {
     img_thresholded=(Image<raw8> *)data->map.insert("cmv_threshold",new Image<raw8>());
@@ -70,7 +79,7 @@ ProcessResult PluginColorThreshold::process(FrameData * data, RenderOptions * op
 }
 
 VarList * PluginColorThreshold::getSettings() {
-  return 0;
+  return _settings;
 }
 
 string PluginColorThreshold::getName() {
