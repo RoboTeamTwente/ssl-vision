@@ -61,6 +61,8 @@ chmod +x install_mvBlueFOX.sh
 ## Compilation
  build the code by running:
 ```
+    git clone https://github.com/roboteamtwente/ssl-vision
+    git checkout aruco-vision
     mkdir build
     cd build
     cmake ..
