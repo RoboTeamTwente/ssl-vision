@@ -93,22 +93,20 @@ std::vector<PosRotId> ArucoDetector::performTrackingOnImage(cv::Mat image, bool 
             }
             have_detection = true;
         }
-        if (showDebug) {
-            cv::Mat imageCopy;
-            image.copyTo(imageCopy);
-
-            if (have_detection) {
-                for (int i = 0; i < markerIds.size(); i++) {
-                    cv::aruco::drawDetectedMarkers(imageCopy, markerCorners, markerIds);
-                    cv::aruco::drawAxis(imageCopy, cameraMatrix, distCoeffs, rotationVectors[i], translationVectors[i],
-                                        0.1);
-                }
-            }
-
-            cv::imshow("out", imageCopy);
-            cv::waitKey(10);
-
-        }
+//        if (showDebug) {
+//            cv::Mat imageCopy;
+//            image.copyTo(imageCopy);
+//
+//                for (int i = 0; i < markerIds.size(); i++) {
+//                    cv::aruco::drawDetectedMarkers(imageCopy, markerCorners, markerIds);
+//                    cv::aruco::drawAxis(imageCopy, cameraMatrix, distCoeffs, rotationVectors[i], translationVectors[i],
+//                                        0.1);
+//                }
+//
+//            cv::imshow("out", imageCopy);
+//            //cv::waitKey(10);
+//
+//        }
 
         double currentTime = ((double) cv::getTickCount() - tick) / cv::getTickFrequency();
         totalTime += currentTime;
@@ -181,5 +179,6 @@ double ArucoDetector::getAvgRes(std::vector<cv::Point2f> corners) {
 
 void ArucoDetector::setDictionaryProperties(int total_markers, int bits) {
     dictionary = cv::aruco::Dictionary::create(total_markers, bits);
+    std::cout << "dictionary updated" << std::endl;
 
 }

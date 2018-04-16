@@ -20,6 +20,8 @@
 //========================================================================
 #include "plugin_visualize.h"
 #include <sobel.h>
+#include <opencv2/imgproc.hpp>
+
 
 namespace {
 typedef CameraParameters::AdditionalCalibrationInformation AddnlCalibInfo;
@@ -34,6 +36,7 @@ PluginVisualize::PluginVisualize(
   _v_image = new VarBool("image", true);
   _v_greyscale = new VarBool("greyscale", false);
   _v_thresholded = new VarBool("thresholded", false);
+
   _v_blobs = new VarBool("blobs", false);
   _v_camera_calibration = new VarBool("camera calibration", false);
   _v_calibration_result = new VarBool("calibration result", false);
@@ -54,6 +57,11 @@ PluginVisualize::PluginVisualize(
   _threshold_lut=0;
   edge_image = 0;
   temp_grey_image = 0;
+
+#ifdef ARUCO
+    _v_aruco_threshold = new VarBool("aruco_threshold", false);
+    _settings->addChild(_v_aruco_threshold);
+#endif
 }
 
 
@@ -103,6 +111,24 @@ void PluginVisualize::DrawCameraImage(
     }
   }
 }
+
+#ifdef ARUCO
+void PluginVisualize::DrawArucoThresholdedImage(
+        FrameData* data, VisualizationFrame* vis_frame) {
+  cv::Mat * cv_img = (cv::Mat*)data->map.get("aruco_frame");
+  if (cv_img != 0) {
+      cv::Mat imgcopy;
+      cv::cvtColor(*cv_img, imgcopy, cv::COLOR_GRAY2RGB);
+    RawImage raw;
+    raw.setHeight(cv_img->cols);
+    raw.setHeight(cv_img->rows);
+    raw.setData(cv_img->data);
+    raw.setColorFormat(ColorFormat::COLOR_RGB8);
+
+    vis_frame->data.fromRawImage(raw);
+  }
+}
+#endif
 
 void PluginVisualize::DrawThresholdedImage(
     FrameData* data, VisualizationFrame* vis_frame) {
@@ -410,6 +436,12 @@ ProcessResult PluginVisualize::process(
     if (_v_detected_edges->getBool()) {
       DrawDetectedEdges(data, vis_frame);
     }
+
+#ifdef ARUCO
+    if (_v_aruco_threshold->getBool()) {
+        DrawArucoThresholdedImage(data,vis_frame);
+    }
+#endif
     vis_frame->valid = true;
   } else {
     vis_frame->valid = false;

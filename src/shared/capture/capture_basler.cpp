@@ -14,6 +14,7 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/core/core.hpp"
+const double CaptureBasler::blur_sigma(3);
 #endif
 
 #ifndef VDATA_NO_QT
@@ -261,9 +262,9 @@ RawImage CaptureBasler::getFrame() {
 		img.setData(buf);
 
 #ifdef OPENCV
-		// gaussianBlur(img);
-        // contrast(img, 1.6);
-        // sharpen(img);
+		 //gaussianBlur(img);
+         //contrast(img, 1.6);
+         //sharpen(img);
 #endif
 
 		last_buf = buf;

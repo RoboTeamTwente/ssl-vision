@@ -11,6 +11,7 @@
 #include "visionplugin.h"
 #include <camera_calibration.h>
 #include <messages_robocup_ssl_detection.pb.h>
+#include "opencv2/photo.hpp"
 
 class plugin_detect_aruco;
 

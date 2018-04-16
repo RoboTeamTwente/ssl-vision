@@ -29,6 +29,11 @@
 #include "camera_calibration.h"
 #include "field.h"
 
+#ifdef ARUCO
+#include <opencv2/core.hpp>
+#include <opencv2/core/mat.hpp>
+#endif
+
 /**
 	@author Stefan Zickler
 	\brief This plugin creates an image copy used solely for visualization purposes.
@@ -62,6 +67,9 @@ protected:
   VarBool * _v_calibration_result;
   VarBool * _v_complete_sobel;
   VarBool * _v_detected_edges;
+#ifdef ARUCO
+  VarBool *  _v_aruco_threshold;
+#endif
 
   const CameraParameters& camera_parameters;
   const RoboCupField& real_field;
@@ -112,6 +120,10 @@ public:
    virtual ProcessResult process(FrameData * data, RenderOptions * options);
    virtual VarList * getSettings();
    virtual string getName();
+
+#ifdef ARUCO
+    void DrawArucoThresholdedImage(FrameData *data, VisualizationFrame *vis_frame);
+#endif
 };
 
 #endif

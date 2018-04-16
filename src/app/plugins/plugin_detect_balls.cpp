@@ -295,8 +295,11 @@ ProcessResult PluginDetectBalls::process ( FrameData * data, RenderOptions * opt
       ball->set_pixel_x ( it->reg->cen_x );
       ball->set_pixel_y ( it->reg->cen_y );
     }
+    //std::cerr << num_ball << " balls found" << std::endl;
 
   }
+
+
 
   return ProcessingOk;
 

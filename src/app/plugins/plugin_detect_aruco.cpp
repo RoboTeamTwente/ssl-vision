@@ -5,6 +5,7 @@
 
 #include "plugin_detect_aruco.h"
 
+#define DEBUG
 plugin_detect_aruco::plugin_detect_aruco(FrameBuffer * _buffer, const CameraParameters& camera_params, const RoboCupField& field)
         : VisionPlugin(_buffer), camera_parameters(camera_params), field(field)
 {
@@ -38,6 +39,7 @@ ProcessResult plugin_detect_aruco::process(FrameData *data, RenderOptions *optio
         _marker_bits = _settings->marker_bits->getInt();
         _total_markers = _settings->total_markers->getInt();
         _markers_per_team = _settings->markers_per_team->getInt();
+        detector->setDictionaryProperties(_total_markers, _marker_bits);
 
     }
     if (!_enabled) {
@@ -58,9 +60,12 @@ ProcessResult plugin_detect_aruco::process(FrameData *data, RenderOptions *optio
             CV_8UC3,
             data->video.getData());
 
-    cv::cvtColor(img,img,cv::COLOR_RGB2GRAY);
-    cv::threshold(img,img,127,255,cv::THRESH_BINARY);
-    vector<PosRotId> results = detector->performTrackingOnImage(img, false);
+    //cv::cvtColor(img,img,cv::COLOR_RGB2GRAY);
+    //cv::fastNlMeansDenoising(img, img);
+    //cv::threshold(img,img,127,255,cv::THRESH_BINARY);
+
+    //data->map.insert("aruco_frame",new cv::Mat(img));
+    vector<PosRotId> results = detector->performTrackingOnImage(img, true);
     detection_frame->clear_robots_blue();
     detection_frame->clear_robots_yellow();
 
@@ -89,11 +94,11 @@ ProcessResult plugin_detect_aruco::process(FrameData *data, RenderOptions *optio
         robot->set_pixel_x((float)pri.getX());
         robot->set_pixel_y((float)pri.getY());
 #ifdef DEBUG
-        std::cout << "Detected robot " << robot->robot_id() << " at (" << robot->x() << ", " << robot->y() << ", " << robot->orientation() << ");" << endl;
+        std::cerr << "Detected robot " << robot->robot_id() << " at (" << robot->x() << ", " << robot->y() << ", " << robot->orientation() << ");" << endl;
 #endif
     }
 #ifdef DEBUG
-    std::cout << endl << "-----------------------" << endl;
+    std::cerr << endl << "-----------------------" << endl;
 #endif
     return ProcessingOk;
 
