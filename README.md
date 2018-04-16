@@ -1,3 +1,5 @@
+# SSL-Vision
+
 ```
 ========================================================================
   This software is free: you can redistribute it and/or modify
@@ -59,9 +61,57 @@ chmod +x install_mvBlueFOX.sh
 ## Compilation
  build the code by running:
 ```
+    mkdir build
+    cd build
+    cmake ..
     make
 ```
- The project *should* build without errors or warnings.
+ The project *could* build without errors.
+
+### Troubleshooting
+
+#### Build fails when linking
+ If your build fails in the linking stage, saying certain aruco functions are undefined, add `-DCMAKE_BUILD_TYPE=Release` to the cmake command.
+
+#### Build successful but running fails
+ If cmake finds OpenCV at /opt/ros/kinetic or similarly if the build completed as normal, but the executable will fail when started, the OpenCV version is incorrect, even though cmake thinks nothing is wrong.
+ 
+ If you have a different OpenCV installation you can try to explicitly point to that installation by using
+ ```
+ cmake -DCMAKE_BUILD_TYPE=Release -DOpenCV_DIR=<OpenCV install dir>/share/opencv ..
+ ```
+ 
+ If you don't have a correct install, build opencv with opencv_contrib (https://github.com/opencv/opencv and https://github.com/opencv/opencv_contrib )
+ The following code should install OpenCV 3.4.1 with contrib to /usr/local/
+```
+ cd /tmp
+ git clone https://github.com/opencv/opencv
+ git clone https://github.com/opencv/opencv_contrib
+ cd opencv_contrib
+ git checkout 3.4.1
+ cd ../opencv
+ git checkout 3.4.1
+ mkdir build
+ cd build
+ cmake -DOPENCV_EXTRA_MODULES_PATH=/tmp/opencv_contrib/modules ..
+ make
+ sudo make install
+```
+ Now you should be able to build ssl-vision with
+ ```
+ cmake -DCMAKE_BUILD_TYPE=Release -DOpenCV_DIR=/usr/local/share/opencv ..
+ ```
+
+### Building is slow
+ Instead of 
+ ```
+ make
+ ```
+ use
+ ```
+ make -j8
+ ```
+ where 8 is the amount of threads dedicated to building. You can use any number >= 1 that your machine is comfortable with. Note that there should not be a space between j and the number.
 
 ## Running
   1. depending on your OS, you might need to ensure that you
@@ -132,7 +182,7 @@ chmod +x install_mvBlueFOX.sh
 #### Storage of Settings and Parameters 
 
    * When you quit the application normally *parameters will not be 
-   automatically saved*.  Insetad, you need to click on the `Save Settings`
+   automatically saved*.  Instead, you need to click on the `Save Settings`
    button immediately under the main `Vision System` node.
 
    * All settings should be automatically restored during the next
