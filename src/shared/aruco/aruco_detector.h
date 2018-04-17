@@ -10,7 +10,9 @@
 #include "opencv2/opencv.hpp"
 #include "opencv2/aruco.hpp"
 #include <cmath>
+#include <mutex>
 #include "pos_rot_id.h"
+#include <unistd.h>
 
 class ArucoDetector {
 
@@ -35,7 +37,7 @@ public:
     std::vector<PosRotId> performTrackingOnImage(cv::Mat image, bool showDebug);
     void setDictionaryProperties(int total_markers, int bits);
 private:
-    
+    std::mutex dict_mutex;
 
     /// Transforms the observed marker position camera coordinate to a coordinate relative to origin and limit.
     /// returns [0,0] if the position is outside the area defined by the origin and limit marker.
@@ -68,7 +70,7 @@ private:
 //    cv::Mat limitRot;
 
     cv::Mat cameraMatrix, distCoeffs;
-    cv::Ptr<cv::aruco::Dictionary> dictionary = cv::aruco::Dictionary::create(20,3);
+    cv::Ptr<cv::aruco::Dictionary> dictionary;// = cv::aruco::Dictionary::create(20,3);
     cv::Ptr<cv::aruco::DetectorParameters> detectorParams = cv::aruco::DetectorParameters::create();
 };
 

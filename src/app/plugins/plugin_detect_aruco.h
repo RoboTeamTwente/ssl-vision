@@ -12,6 +12,9 @@
 #include <camera_calibration.h>
 #include <messages_robocup_ssl_detection.pb.h>
 #include "opencv2/photo.hpp"
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/core/core.hpp"
 
 class plugin_detect_aruco;
 
@@ -55,6 +58,7 @@ protected:
 
     ArucoDetector * detector;
 
+    cv::Mat * graylut;
     const CameraParameters& camera_parameters;
     const RoboCupField& field;
 

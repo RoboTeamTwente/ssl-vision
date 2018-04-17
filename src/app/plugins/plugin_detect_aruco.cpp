@@ -11,6 +11,8 @@ plugin_detect_aruco::plugin_detect_aruco(FrameBuffer * _buffer, const CameraPara
 {
 
 
+
+
     _settings = new plugin_detect_aruco_settings();
     _notifier.addRecursive(_settings->getSettings());
 
@@ -19,6 +21,14 @@ plugin_detect_aruco::plugin_detect_aruco(FrameBuffer * _buffer, const CameraPara
     _total_markers = _settings->total_markers->getInt();
     _markers_per_team = _settings->markers_per_team->getInt();
     detector = new ArucoDetector(_total_markers, _marker_bits);
+
+    graylut = new cv::Mat(1,256,CV_8UC1);
+    int n = 6;
+    for (int i = 0; i < 256; i+= 1 << (8-n)) {
+        for (int j = 0; j < (1 << (8-n)); j++) {
+            graylut->at<uchar>(0,i+j) = uchar(i);
+        }
+    }
 
 }
 
@@ -39,7 +49,7 @@ ProcessResult plugin_detect_aruco::process(FrameData *data, RenderOptions *optio
         _marker_bits = _settings->marker_bits->getInt();
         _total_markers = _settings->total_markers->getInt();
         _markers_per_team = _settings->markers_per_team->getInt();
-        detector->setDictionaryProperties(_total_markers, _marker_bits);
+        //detector->setDictionaryProperties(_total_markers, _marker_bits);
 
     }
     if (!_enabled) {
@@ -60,9 +70,12 @@ ProcessResult plugin_detect_aruco::process(FrameData *data, RenderOptions *optio
             CV_8UC3,
             data->video.getData());
 
-    //cv::cvtColor(img,img,cv::COLOR_RGB2GRAY);
+    cv::cvtColor(img,img,cv::COLOR_RGB2GRAY);
+    //cv::LUT(img,*graylut,img);
+    //cv::GaussianBlur(img, img, cv::Size(), 3);
+
     //cv::fastNlMeansDenoising(img, img);
-    //cv::threshold(img,img,127,255,cv::THRESH_BINARY);
+    //cv::threshold(img,img,127,255,cv::THRESH_TOZERO);
 
     //data->map.insert("aruco_frame",new cv::Mat(img));
     vector<PosRotId> results = detector->performTrackingOnImage(img, true);
@@ -78,9 +91,9 @@ ProcessResult plugin_detect_aruco::process(FrameData *data, RenderOptions *optio
         camera_parameters.image2field(reg_center3d,reg_img_center,140.0);
         vector2d reg_center(reg_center3d.x,reg_center3d.y);
         SSL_DetectionRobot*  robot = 0;
-        if(pri.getID() >= 16) {
+        if(pri.getID() >= _markers_per_team) {
             robot = robots_blue->Add();
-            robot->set_robot_id((unsigned int)(pri.getID()-16));
+            robot->set_robot_id((unsigned int)(pri.getID()-_markers_per_team));
         } else {
             robot = robots_yellow->Add();
             robot->set_robot_id((unsigned int)pri.getID());
@@ -88,6 +101,7 @@ ProcessResult plugin_detect_aruco::process(FrameData *data, RenderOptions *optio
         robot->set_x((float)reg_center.x);
         robot->set_y((float)reg_center.y);
         robot->set_confidence(1);
+        std::cerr << "orientation before compensation: " << pri.getTheta() << std::endl;
         robot->set_orientation((float)-(pri.getTheta() - .5*CV_PI));
         if (robot->orientation() > (float)CV_PI) robot->set_orientation((robot->orientation()-(2*CV_PI)));
         robot->set_height(0);
