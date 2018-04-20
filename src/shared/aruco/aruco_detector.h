@@ -70,7 +70,7 @@ private:
 //    cv::Mat limitRot;
 
     cv::Mat cameraMatrix, distCoeffs;
-    cv::Ptr<cv::aruco::Dictionary> dictionary;// = cv::aruco::Dictionary::create(20,3);
+    cv::Ptr<cv::aruco::Dictionary> dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50);
     cv::Ptr<cv::aruco::DetectorParameters> detectorParams = cv::aruco::DetectorParameters::create();
 };
 

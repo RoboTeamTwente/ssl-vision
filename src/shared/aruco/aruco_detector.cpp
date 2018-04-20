@@ -36,6 +36,11 @@ ArucoDetector::ArucoDetector(int total_markers, int bits) {
 
     cameraMatrix = *camPtr;
     distCoeffs = *distPtr;
+    detectorParams->minMarkerPerimeterRate = 0.05;
+    detectorParams->maxMarkerPerimeterRate = 0.2;
+    detectorParams->adaptiveThreshWinSizeStep = 15;
+    detectorParams->adaptiveThreshWinSizeMin = 10;
+    detectorParams->adaptiveThreshWinSizeMax = 10;
 
 
 }
@@ -54,6 +59,14 @@ std::vector<PosRotId> ArucoDetector::performTrackingOnImage(cv::Mat image, bool 
         std::vector<std::vector<cv::Point2f> > markerCorners, rejectedCandidates;
         std::vector<cv::Vec3d> rotationVectors, translationVectors;
         cv::aruco::detectMarkers(image, dictionary, markerCorners, markerIds, detectorParams, rejectedCandidates);
+//        for (std::vector<cv::Point2f>& cornervec : markerCorners) {
+//            std::reverse(cornervec.begin(), cornervec.end());
+//        }
+
+        for (int i = 0; i < markerIds.size(); i++) {
+            rotationVectors.emplace_back(cv::Vec3d(1.,1.,1.));
+        }
+
         cv::aruco::estimatePoseSingleMarkers(markerCorners, 0.085, cameraMatrix, distCoeffs, rotationVectors,
                                              translationVectors);
 
@@ -63,8 +76,11 @@ std::vector<PosRotId> ArucoDetector::performTrackingOnImage(cv::Mat image, bool 
             // rotMatrices contains the rotation matrices for each observed marker.
             // These rotation matrices are easier to compare than the rodrigues parameters.
             std::vector<cv::Mat> rotMatrices = std::vector<cv::Mat>();
-            for (const auto &v : rotationVectors) {
+
+            for (int i = 0; i < markerIds.size(); i++) {
+            //for (const auto &v : rotationVectors) {
                 cv::Mat vMat;
+                auto v = rotationVectors[i];
                 cv::Rodrigues(v, vMat);
                 rotMatrices.insert(rotMatrices.end(), vMat);
             }
@@ -95,6 +111,9 @@ std::vector<PosRotId> ArucoDetector::performTrackingOnImage(cv::Mat image, bool 
                 }
 
 
+            }
+            if (showDebug) {
+                std::cout << std::endl << "========= END OF DETECTION ========" << std::endl << std::endl;
             }
             have_detection = true;
         }
@@ -184,8 +203,8 @@ double ArucoDetector::getAvgRes(std::vector<cv::Point2f> corners) {
 
 void ArucoDetector::setDictionaryProperties(int total_markers, int bits) {
     dict_mutex.lock();
-    dictionary = cv::aruco::Dictionary::create(total_markers, bits);
-    std::cout << "dictionary updated, is now " << dictionary->markerSize << std::endl;
-    usleep(10000);
+    //dictionary = cv::aruco::Dictionary::create(total_markers, bits);
+    //std::cout << "dictionary updated, is now " << dictionary->markerSize << std::endl;
+    //usleep(10000);
     dict_mutex.unlock();
 }

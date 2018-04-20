@@ -14,8 +14,11 @@ public:
     double getX();
     double getY();
     double getTheta();
+    bool   isValid();
+    void   setValid(bool b);
 
 private:
+    bool valid;
     int id;
     double x,y,theta;
 };

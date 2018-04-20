@@ -9,6 +9,7 @@ PosRotId::PosRotId(int id, double x, double y, double theta) {
     this -> x = x;
     this -> y = y;
     this -> theta = theta;
+    this -> valid = false;
 }
 
 int PosRotId::getID() {
@@ -25,4 +26,12 @@ double PosRotId::getY() {
 
 double PosRotId::getTheta() {
     return theta;
+}
+
+bool PosRotId::isValid() {
+    return valid;
+}
+
+void PosRotId::setValid(bool b) {
+    valid = b;
 }

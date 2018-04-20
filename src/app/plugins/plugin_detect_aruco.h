@@ -18,6 +18,21 @@
 
 class plugin_detect_aruco;
 
+class RunFilter{
+
+public:
+    RunFilter(unsigned int _size, unsigned int _threshold);
+    void filter(std::vector<PosRotId>& input);
+
+private:
+    unsigned int size;
+    unsigned int threshold;
+    std::vector<std::vector<PosRotId>> history;
+    unsigned int * counters;
+
+
+};
+
 class plugin_detect_aruco_settings{
     friend class plugin_detect_aruco;
 
@@ -57,6 +72,9 @@ protected:
     plugin_detect_aruco_settings * _settings;
 
     ArucoDetector * detector;
+    RunFilter * filter;
+
+
 
     cv::Mat * graylut;
     const CameraParameters& camera_parameters;
@@ -73,6 +91,8 @@ public:
 
     ~plugin_detect_aruco();
 };
+
+
 
 
 #endif //SSL_VISION_PLUGIN_DETECT_ARUCO_H

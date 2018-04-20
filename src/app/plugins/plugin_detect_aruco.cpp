@@ -6,6 +6,41 @@
 #include "plugin_detect_aruco.h"
 
 #define DEBUG
+
+RunFilter::RunFilter(unsigned int _size, unsigned int _threshold) {
+    size = _size;
+    threshold = _threshold;
+    counters = new unsigned int[size];
+    for (int i = 0; i < size; i++) {
+        counters[i] = 0;
+    }
+}
+
+void RunFilter::filter(std::vector<PosRotId> &input) {
+
+    history.push_back(input);
+    if (history.size() > size) {
+        std::vector<PosRotId> out = history.at(0);
+        for (PosRotId bot : out) {
+            counters[bot.getID()]--;
+        }
+        history.erase(history.begin());
+    }
+    for (auto it = input.begin(); it != input.end(); it++) {
+    //for ( PosRotId bot : input) {
+        PosRotId& bot = *it;
+        counters[bot.getID()]++;
+        int count = counters[bot.getID()];
+        if (count > threshold) {
+            bot.setValid(true);
+        }
+        bot.isValid();
+
+    }
+    return;
+}
+
+
 plugin_detect_aruco::plugin_detect_aruco(FrameBuffer * _buffer, const CameraParameters& camera_params, const RoboCupField& field)
         : VisionPlugin(_buffer), camera_parameters(camera_params), field(field)
 {
@@ -21,9 +56,10 @@ plugin_detect_aruco::plugin_detect_aruco(FrameBuffer * _buffer, const CameraPara
     _total_markers = _settings->total_markers->getInt();
     _markers_per_team = _settings->markers_per_team->getInt();
     detector = new ArucoDetector(_total_markers, _marker_bits);
+    filter = new RunFilter(30,25);
 
     graylut = new cv::Mat(1,256,CV_8UC1);
-    int n = 6;
+    int n = 5;
     for (int i = 0; i < 256; i+= 1 << (8-n)) {
         for (int j = 0; j < (1 << (8-n)); j++) {
             graylut->at<uchar>(0,i+j) = uchar(i);
@@ -70,7 +106,7 @@ ProcessResult plugin_detect_aruco::process(FrameData *data, RenderOptions *optio
             CV_8UC3,
             data->video.getData());
 
-    cv::cvtColor(img,img,cv::COLOR_RGB2GRAY);
+    //cv::cvtColor(img,img,cv::COLOR_RGB2GRAY);
     //cv::LUT(img,*graylut,img);
     //cv::GaussianBlur(img, img, cv::Size(), 3);
 
@@ -79,6 +115,7 @@ ProcessResult plugin_detect_aruco::process(FrameData *data, RenderOptions *optio
 
     //data->map.insert("aruco_frame",new cv::Mat(img));
     vector<PosRotId> results = detector->performTrackingOnImage(img, true);
+    filter->filter(results);
     detection_frame->clear_robots_blue();
     detection_frame->clear_robots_yellow();
 
@@ -86,6 +123,7 @@ ProcessResult plugin_detect_aruco::process(FrameData *data, RenderOptions *optio
     auto robots_yellow = detection_frame->mutable_robots_yellow();
     for (PosRotId pri : results)
     {
+        if (!pri.isValid()) continue;
         vector2d reg_img_center(pri.getX(),pri.getY());
         vector3d reg_center3d;
         camera_parameters.image2field(reg_center3d,reg_img_center,140.0);
