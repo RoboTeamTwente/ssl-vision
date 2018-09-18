@@ -58,13 +58,6 @@ plugin_detect_aruco::plugin_detect_aruco(FrameBuffer * _buffer, const CameraPara
     detector = new ArucoDetector(_total_markers, _marker_bits);
     filter = new RunFilter(30,25);
 
-    graylut = new cv::Mat(1,256,CV_8UC1);
-    int n = 5;
-    for (int i = 0; i < 256; i+= 1 << (8-n)) {
-        for (int j = 0; j < (1 << (8-n)); j++) {
-            graylut->at<uchar>(0,i+j) = uchar(i);
-        }
-    }
 
 }
 
@@ -140,8 +133,12 @@ ProcessResult plugin_detect_aruco::process(FrameData *data, RenderOptions *optio
         robot->set_y((float)reg_center.y);
         robot->set_confidence(1);
         std::cerr << "orientation before compensation: " << pri.getTheta() << std::endl;
+
+
         robot->set_orientation((float)-(pri.getTheta() - .5*CV_PI));
         if (robot->orientation() > (float)CV_PI) robot->set_orientation((robot->orientation()-(2*CV_PI)));
+
+
         robot->set_height(0);
         robot->set_pixel_x((float)pri.getX());
         robot->set_pixel_y((float)pri.getY());

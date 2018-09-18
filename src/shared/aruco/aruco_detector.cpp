@@ -16,12 +16,6 @@ ArucoDetector::ArucoDetector(int total_markers, int bits) {
     totalTime = 0;
     totalIterations = 0;
 
-    // At the start the origin and limit marker are not yet observed. Start with origin at (0,0) and limit at
-    // (input video pixel height, input video pixel width)
-//    origin = cv::Point2f(0.0f, 0.0f);
-//    limit = cv::Point2f((float) 1024, (float) 1280);
-//    originRot = cv::Mat::zeros(3, 3, CV_64F);
-//    limitRot = cv::Mat::zeros(3, 3, CV_64F);
 
     // Populate the camera optical parameters. These are unique per camera and should be recalibrated if the camera focus
     // changes

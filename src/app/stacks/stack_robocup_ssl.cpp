@@ -80,6 +80,8 @@ StackRoboCupSSL::StackRoboCupSSL(
   stack.push_back(new plugin_detect_aruco(_fb,*camera_parameters,*global_field));
 #endif
 
+
+
   stack.push_back(new PluginDetectBalls(_fb,lut_yuv,*camera_parameters,*global_field,global_ball_settings));
 
   stack.push_back(new PluginSSLNetworkOutput(

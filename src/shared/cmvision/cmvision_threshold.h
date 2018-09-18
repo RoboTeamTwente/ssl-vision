@@ -52,7 +52,6 @@ public:
     static bool thresholdImageYUV422_UYVY(Image<raw8> * target, const RawImage * source, YUVLUT * lut);
     static bool thresholdImageYUV444(Image<raw8> * target, const ImageInterface * source, YUVLUT * lut);
     static bool thresholdImageRGB(Image<raw8> * target, const ImageInterface * source, RGBLUT * lut);
-    static void thresholdImageYUV422_UYVYWorker(lut_mask_t * LUT, int X_SHIFT, int Y_SHIFT, int Z_SHIFT, int Z_AND_Y_BITS, int Z_BITS, uyvy* source_pointer, raw8* target_pointer, unsigned int start, unsigned int end);
 
     static void colorizeImageFromThresholding(rgbImage & target, const Image<raw8> & source, LUT3D * lut);
 
@@ -61,6 +60,10 @@ public:
     //static void thresholdImage(Image * target, const Image<yuvy> * source, const YUVLUT * lut);
 
     //static void thresholdImage(Image * target, const Image<uyvy> * source, const LUT3D * lut);
+
+    static void thresholdImageYUV422_UYVYWorker(lut_mask_t * LUT, int X_SHIFT, int Y_SHIFT, int Z_SHIFT, int Z_AND_Y_BITS, int Z_BITS,
+                                    uyvy* source_pointer, raw8* target_pointer, unsigned int start, unsigned int end);
+
 
     static void thresholdImageYUV444Worker(lut_mask_t *LUT, int X_SHIFT, int Y_SHIFT, int Z_SHIFT, int Z_AND_Y_BITS, int Z_BITS,
                                     yuv *source_pointer, raw8 *target_pointer, unsigned int start, unsigned int end);

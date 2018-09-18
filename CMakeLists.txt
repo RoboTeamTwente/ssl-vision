@@ -52,7 +52,7 @@ else()
 endif()
 
 #set (OpenCV_DIR /usr/share/opencv)
-find_package( OpenCV 3 COMPONENTS aruco photo REQUIRED )
+find_package( OpenCV 3 REQUIRED aruco HINTS /usr/local/share/OpenCV )
 if(OpenCV_FOUND)
   include_directories(${OpenCV_INCLUDE_DIRS})
   add_definitions(-D OPENCV)
