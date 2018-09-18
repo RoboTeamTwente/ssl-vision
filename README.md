@@ -80,7 +80,7 @@ chmod +x install_mvBlueFOX.sh
  
  If you have a different OpenCV installation you can try to explicitly point to that installation by using
  ```
- cmake -DCMAKE_BUILD_TYPE=Release -DOpenCV_DIR=<OpenCV install dir> -DWITH_GTK=OFF ..
+ cmake -DCMAKE_BUILD_TYPE=Release -DOpenCV_DIR=<OpenCV install dir>  ..
  ```
  
  If you don't have a correct install, build opencv with opencv_contrib (https://github.com/opencv/opencv and https://github.com/opencv/opencv_contrib )
@@ -95,7 +95,7 @@ chmod +x install_mvBlueFOX.sh
  git checkout 3.4.1
  mkdir build
  cd build
- cmake -DOPENCV_EXTRA_MODULES_PATH=/tmp/opencv_contrib/modules ..
+ cmake -DOPENCV_EXTRA_MODULES_PATH=/tmp/opencv_contrib/modules -DWITH_GTK=OFF ..
  make
  sudo make install
 ```
