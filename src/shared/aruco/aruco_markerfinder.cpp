@@ -6,6 +6,8 @@
 
 ArucoMarkerfinder::ArucoMarkerfinder() = default;
 
+
+/// Finds pixels
 void ArucoMarkerfinder::findWhitePixels(int i, int j, std::vector<int> &x, std::vector<int> &y, Vec3b color, Mat result) {
     // assume the pixel is white, unless proven otherwise.. if white -> put data in new matrix.
     bool pixelIsWhite = true;
