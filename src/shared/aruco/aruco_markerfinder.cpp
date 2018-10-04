@@ -7,65 +7,69 @@
 ArucoMarkerfinder::ArucoMarkerfinder() = default;
 
 
-/// Finds pixels
-void ArucoMarkerfinder::findWhitePixels(int i, int j, std::vector<int> &x, std::vector<int> &y, Vec3b color, Mat result) {
-    // assume the pixel is white, unless proven otherwise.. if white -> put data in new matrix.
+bool ArucoMarkerfinder::isWhite(Vec3b &color, int white) {
     bool pixelIsWhite = true;
-    char twoPixelsWhite = 2;
     for (int c = 0; c <= 2; c++) {
-        if (color[c] < g_whiteMargin) {
+        if (color[c] < white) {
             pixelIsWhite = false;
-            twoPixelsWhite--;
         }
     }
-    if (pixelIsWhite || twoPixelsWhite >= 1) {
-        result.at<Vec3b>(i/g_skipPixels,j/g_skipPixels) = {0,255,0};
-        x.push_back(i);
-        y.push_back(j);
-    }
-
-
+    return pixelIsWhite;
 }
 
-void ArucoMarkerfinder::findWhiteSquares(int i, int j, std::vector<int> &x, std::vector<int> &y, Mat whitePixels, int iteration) {
+/// Finds pixels
+void ArucoMarkerfinder::findWhitePixels(int i, int j, std::vector<int> &x, std::vector<int> &y, std::vector<int> &index, Mat image) {
+    // assume the pixel is white, unless proven otherwise.. if white -> put data in new matrix and find the surrounding pixels.
+
+    Vec3b color = image.at<Vec3b>(i,j);
+
+    if ( isWhite(color, g_whiteMargin) ) {
+
+        findWhiteSquares(i,j,x,y,image,0);
+        index.push_back((int) x.size());
+
+    }
+}
+
+void ArucoMarkerfinder::findWhiteSquares(int i, int j, std::vector<int> &x, std::vector<int> &y, Mat image, int iteration) {
     // push the current pixel data for this blob/square into a vector
     x.push_back(i);
     y.push_back(j);
 
     // 'itColorFactor' and 'd' is used for visualization of the recursive pixel checking
-    unsigned char itColorFactor = 1;
     Vec3b green = {0,255,0};
+
     if (iteration == 0) {
         // set the first pixel in the square to white
-        Vec3b newColor = {255,255,255};
-        whitePixels.at<Vec3b>(i-1,j) = newColor;
+        Vec3b grey = {70,60,70};
+        image.at<Vec3b>(i,j) = grey;
     }
 
     // if whe are not at the edge.. check left,up,right,down for pixels in the current square
-    if (iteration < MAXRECURSION && (i > 1) && (j > 1) && (i < whitePixels.rows-1) && (j < whitePixels.cols-1) ) {
-        if (whitePixels.at<Vec3b>(i - 1, j) == green) {
-            auto d = (unsigned char)( iteration * itColorFactor );
-            Vec3b newColor = {d, (unsigned char) (255 - d), d};
-            whitePixels.at<Vec3b>(i - 1, j) = newColor;
-            findWhiteSquares(i - 1, j, x, y, whitePixels, iteration + 1);
+    if (iteration < MAXRECURSION && (i > 1) && (j > 1) && (i < image.rows-1) && (j < image.cols-1) ) {
+
+        Vec3b iMinColor = image.at<Vec3b>(i - 1, j);
+        if ( isWhite(iMinColor, g_whiteMargin - g_deltaWhiteMargin) ) {
+            image.at<Vec3b>(i - 1, j) = green;
+            findWhiteSquares(i - 1, j, x, y, image, iteration + 1);
         }
-        if (whitePixels.at<Vec3b>(i, j - 1) == green) {
-            auto d = (unsigned char)( iteration * itColorFactor );
-            Vec3b newColor = {d, (unsigned char) (255 - d), d};
-            whitePixels.at<Vec3b>(i, j - 1) = newColor;
-            findWhiteSquares(i, j - 1, x, y, whitePixels, iteration + 1);
+
+        Vec3b jMinColor = image.at<Vec3b>(i, j - 1);
+        if ( isWhite(jMinColor, g_whiteMargin - g_deltaWhiteMargin) ) {
+            image.at<Vec3b>(i, j - 1) = green;
+            findWhiteSquares(i, j - 1, x, y, image, iteration + 1);
         }
-        if (whitePixels.at<Vec3b>(i + 1, j) == green) {
-            auto d = (unsigned char)( iteration * itColorFactor );
-            Vec3b newColor = {d, (unsigned char) (255 - d), d};
-            whitePixels.at<Vec3b>(i + 1, j) = newColor;
-            findWhiteSquares(i + 1, j, x, y, whitePixels, iteration + 1);
+
+        Vec3b iPlusColor = image.at<Vec3b>(i + 1, j);
+        if ( isWhite(iPlusColor, g_whiteMargin - g_deltaWhiteMargin) ) {
+            image.at<Vec3b>(i + 1, j) = green;
+            findWhiteSquares(i + 1, j, x, y, image, iteration + 1);
         }
-        if (whitePixels.at<Vec3b>(i, j + 1) == green) {
-            auto d = (unsigned char)( iteration * itColorFactor );
-            Vec3b newColor = {d, (unsigned char) (255 - d), d};
-            whitePixels.at<Vec3b>(i, j + 1) = newColor;
-            findWhiteSquares(i, j + 1, x, y, whitePixels, iteration + 1);
+
+        Vec3b jPlusColor = image.at<Vec3b>(i, j + 1);
+        if ( isWhite(jPlusColor, g_whiteMargin - g_deltaWhiteMargin) ) {
+            image.at<Vec3b>(i, j + 1) = green;
+            findWhiteSquares(i, j + 1, x, y, image, iteration + 1);
         }
     }
 }
@@ -138,13 +142,6 @@ bool ArucoMarkerfinder::findMarkerData(std::vector<int> &x, std::vector<int> &y,
         }
     }
 
-    // visualization of the corners/center in color red
-    image.at<Vec3b>(x[aIndex]*g_skipPixels,y[aIndex]*g_skipPixels) = {0,0,255};
-    image.at<Vec3b>(x[bIndex]*g_skipPixels,y[bIndex]*g_skipPixels) = {0,0,255};
-    image.at<Vec3b>(x[cIndex]*g_skipPixels,y[cIndex]*g_skipPixels) = {0,0,255};
-    image.at<Vec3b>(x[dIndex]*g_skipPixels,y[dIndex]*g_skipPixels) = {0,0,255};
-    image.at<Vec3b>(xCenter*g_skipPixels,yCenter*g_skipPixels) = {0,0,255};
-
     // vector calculations for angle theta and the positions of the aruco data
 
     // vectors
@@ -197,20 +194,27 @@ bool ArucoMarkerfinder::findMarkerData(std::vector<int> &x, std::vector<int> &y,
             xx = x[aIndex] - ( (i+1.5)*( (ARUCOSIZE-j+0.5)*ux + (j+1.5)*uux ) + (j+1.5)*( (ARUCOSIZE-i+0.5)*vx + (i+1.5)*vvx ) )/( (ARUCOSIZE+2)*(ARUCOSIZE+2) );
             yy = y[aIndex] - ( (i+1.5)*( (ARUCOSIZE-j+0.5)*uy + (j+1.5)*uuy ) + (j+1.5)*( (ARUCOSIZE-i+0.5)*vy + (i+1.5)*vvy ) )/( (ARUCOSIZE+2)*(ARUCOSIZE+2) );
             Mat isWhite = Mat::zeros(1,1,CV_8UC3);
-            std::vector<int> nothing;
-            Vec3b color = image.at<Vec3b>((int)xx*g_skipPixels, (int)yy*g_skipPixels);
-            findWhitePixels(1, 1, nothing, nothing, color, isWhite);
-            if ( isWhite.at<Vec3b>(0,0) == green) {
-                image.at<Vec3b>((int)round(xx)*g_skipPixels,(int)round(yy)*g_skipPixels) = {0,255,255};
+
+            Vec3b color = image.at<Vec3b>((int)round(xx), (int)round(yy));
+
+            if ( color == green ) {
+                image.at<Vec3b>((int)round(xx),(int)round(yy)) = {255,127,63};
                 markerData.push_back(1);
             }
             else {
-                image.at<Vec3b>((int)round(xx)*g_skipPixels,(int)round(yy)*g_skipPixels) = {255,255,0};
+                image.at<Vec3b>((int)round(xx),(int)round(yy)) = {127,255,63};
                 markerData.push_back(0);
             }
 
         }
     }
+
+    // visualization of the corners/center in color red
+    image.at<Vec3b>(x[aIndex],y[aIndex]) = {0,0,255};
+    image.at<Vec3b>(x[bIndex],y[bIndex]) = {0,0,255};
+    image.at<Vec3b>(x[cIndex],y[cIndex]) = {0,0,255};
+    image.at<Vec3b>(x[dIndex],y[dIndex]) = {0,0,255};
+
     posRot.push_back(xCenter);
     posRot.push_back(yCenter);
     posRot.push_back(theta);
@@ -225,35 +229,21 @@ void ArucoMarkerfinder::findMarkerId(std::vector<int> &resultData, std::vector<i
 
 void ArucoMarkerfinder::findMarkers(Mat image, std::vector<int> &markerIds, std::vector<int> &markerX, std::vector<int> &markerY, std::vector<int> &markerTheta) {
 
-    Mat resultWhitePixels;
-    resultWhitePixels = Mat::zeros(image.rows / g_skipPixels, image.cols / g_skipPixels, CV_8UC3);
-
     // create vector of all x- and y-positions of the white pixels
-    std::vector<int> xWhitePixels;
-    std::vector<int> yWhitePixels;
 
+    std::vector<int> xSqMarker;
+    std::vector<int> ySqMarker;
+    std::vector<int> startIndSqMarker = {0};
+
+    Vec3b green = {0,255,0};
     // iterate through all pixels, skipping g_skipPixels- pixels, and find white ones.
     for (int i = g_skipPixels+1; i < image.rows - g_skipPixels; i += g_skipPixels) {
         for (int j = g_skipPixels+1; j < image.cols - g_skipPixels; j += g_skipPixels) {
             auto &color = image.at<Vec3b>(i, j);
-            findWhitePixels(i, j, xWhitePixels, yWhitePixels, color, resultWhitePixels);
-        }
-    }
+            if (color != green) {
+                findWhitePixels(i, j, xSqMarker, ySqMarker, startIndSqMarker, image);
 
-    std::vector<int> xSqMarker;
-    //xSqMarker.reserve(image.rows*image.cols+1);
-    std::vector<int> ySqMarker;
-    //xSqMarker.reserve(image.rows*image.cols+1);
-    std::vector<int> startIndSqMarker = {0};
-
-    for (unsigned int pix = 0; pix < xWhitePixels.size(); pix++) {
-
-        int x = xWhitePixels.at(pix) / g_skipPixels;
-        int y = yWhitePixels.at(pix) / g_skipPixels;
-        Vec3b green = {0, 255, 0};
-        if (resultWhitePixels.at<Vec3b>(x, y) == green) {
-            findWhiteSquares(x, y, xSqMarker, ySqMarker, resultWhitePixels, 0);
-            startIndSqMarker.push_back((int) xSqMarker.size());
+            }
         }
     }
 
