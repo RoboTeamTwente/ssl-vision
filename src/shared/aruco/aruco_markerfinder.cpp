@@ -18,7 +18,7 @@ bool ArucoMarkerfinder::isWhite(Vec3b &color, int white) {
     return pixelIsWhite;
 }
 
-/// checks if a pixel is white. if it is, find pixels around it and make a blob of white.
+/// checks if a pixel is white. if it is, find pixels around it and make a blob of white
 void ArucoMarkerfinder::findWhitePixels(int i, int j, std::vector<int> &x, std::vector<int> &y, std::vector<int> &index, Mat image) {
 
     auto &color = image.at<Vec3b>(i,j);
@@ -248,7 +248,7 @@ void ArucoMarkerfinder::findMarkerId(std::vector<int> &resultData, std::vector<i
 
 }
 
-/// finds the robot id, x,y position and rotations of all robots.
+/// finds the robot id, x,y position and rotations of all robots
 void ArucoMarkerfinder::findMarkers(Mat image, std::vector<int> &markerIds, std::vector<int> &markerX, std::vector<int> &markerY, std::vector<int> &markerTheta) {
 
     // create vector of all x- and y-positions of the white pixels
