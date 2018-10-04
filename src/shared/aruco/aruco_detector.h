@@ -12,6 +12,7 @@
 #include <cmath>
 #include <mutex>
 #include "pos_rot_id.h"
+#include "aruco_markerfinder.h"
 #include <unistd.h>
 
 class ArucoDetector {
@@ -38,6 +39,9 @@ public:
     void setDictionaryProperties(int total_markers, int bits);
 private:
     std::mutex dict_mutex;
+
+    ArucoMarkerfinder finder;
+
 
     /// Transforms the observed marker position camera coordinate to a coordinate relative to origin and limit.
     /// returns [0,0] if the position is outside the area defined by the origin and limit marker.

@@ -4,12 +4,14 @@
 
 #include "aruco_detector.h"
 
+#define DEBUG
 
 ArucoDetector::ArucoDetector(int total_markers, int bits) {
 //    originMarker = originID;
 //    limitMarker = limitID;
 
     setDictionaryProperties(total_markers, bits);
+
 
 
 
@@ -41,7 +43,6 @@ ArucoDetector::ArucoDetector(int total_markers, int bits) {
 
 
 std::vector<PosRotId> ArucoDetector::performTrackingOnImage(cv::Mat image, bool showDebug) {
-    bool have_detection = false;
 
     std::vector<PosRotId> result = std::vector<PosRotId>();
 
@@ -50,66 +51,36 @@ std::vector<PosRotId> ArucoDetector::performTrackingOnImage(cv::Mat image, bool 
         auto tick = (double) cv::getTickCount();
 
         std::vector<int> markerIds;
-        std::vector<std::vector<cv::Point2f> > markerCorners, rejectedCandidates;
-        std::vector<cv::Vec3d> rotationVectors, translationVectors;
-        cv::aruco::detectMarkers(image, dictionary, markerCorners, markerIds, detectorParams, rejectedCandidates);
-//        for (std::vector<cv::Point2f>& cornervec : markerCorners) {
-//            std::reverse(cornervec.begin(), cornervec.end());
-//        }
+        std::vector<int> markerX;
+        std::vector<int> markerY;
+        std::vector<int> markerTheta;
 
-        for (int i = 0; i < markerIds.size(); i++) {
-            rotationVectors.emplace_back(cv::Vec3d(1.,1.,1.));
-        }
+        finder.findMarkers(image, markerIds, markerX, markerY, markerTheta);
 
-        cv::aruco::estimatePoseSingleMarkers(markerCorners, 0.085, cameraMatrix, distCoeffs, rotationVectors,
-                                             translationVectors);
 
         dict_mutex.unlock();
         if (!markerIds.empty()) {
-            // Convert the rodrigues parameter vectors from the estimatePoseSingleMarkers method to rotation matrices.
-            // rotMatrices contains the rotation matrices for each observed marker.
-            // These rotation matrices are easier to compare than the rodrigues parameters.
-            std::vector<cv::Mat> rotMatrices = std::vector<cv::Mat>();
 
-            for (int i = 0; i < markerIds.size(); i++) {
-            //for (const auto &v : rotationVectors) {
-                cv::Mat vMat;
-                auto v = rotationVectors[i];
-                cv::Rodrigues(v, vMat);
-                rotMatrices.insert(rotMatrices.end(), vMat);
-            }
-
-
-            for (int i = 0; i < markerIds.size(); i++) {
+            for (int i = 0; i < (int)markerIds.size(); i++) {
                 int id = markerIds[i];
+                int x = markerX[i];
+                int y = markerY[i];
+                int angle = markerTheta[i];
 
-                // Calculate the angle of the marker relative to the origin marker.
-                // The delta matrix is calculated as follows:
-                // ~[origin] * [marker]
-                // Because the camera is perpendicular to the surface we are concerned with the rotation in the
-                // Z axis. The rotation angle in the z axis can be calculated as the
-                // atan2 of delta[21] and delta[11]
-
-                cv::Mat originInv = rotMatrices[i];
-                double elem21 = originInv.at<double>(1, 0);
-                double elem11 = originInv.at<double>(0, 0);
-                double angleZ = std::atan2(elem21, elem11);
-                cv::Point2f pos = calculatePosition(markerCorners[i]);
-                PosRotId posRot = PosRotId(id, pos.x, pos.y, angleZ);
+                PosRotId posRot = PosRotId(id, x, y, angle);
                 result.insert(result.end(), posRot);
 
 
                 if (showDebug) {
-                    std::cout << "Marker " << id << " at " << pos
-                              << " with rotation " << angleZ << std::endl;
+                    std::cout << "Marker " << id << " at [" << x << ", " << y <<
+                                 "] with rotation " << angle << std::endl;
                 }
 
 
             }
             if (showDebug) {
-                std::cout << std::endl << "========= END OF DETECTION ========" << std::endl << std::endl;
+                std::cerr << std::endl << "========= END OF DETECTION ========" << std::endl << std::endl;
             }
-            have_detection = true;
         }
 //        if (showDebug) {
 //            cv::Mat imageCopy;
@@ -139,7 +110,6 @@ std::vector<PosRotId> ArucoDetector::performTrackingOnImage(cv::Mat image, bool 
 
 cv::Point2f
 ArucoDetector::calculatePosition(std::vector<cv::Point2f> observedPos) {
-    cv::Point2f centerMarker;
 
     // Calculate the center of the marker in camera coordinates
     // This is accomplished by calculating the point with x coordinate half between two opposing corners

@@ -142,13 +142,10 @@ ProcessResult plugin_detect_aruco::process(FrameData *data, RenderOptions *optio
         robot->set_height(0);
         robot->set_pixel_x((float)pri.getX());
         robot->set_pixel_y((float)pri.getY());
-#ifdef DEBUG
         std::cerr << "Detected robot " << robot->robot_id() << " at (" << robot->x() << ", " << robot->y() << ", " << robot->orientation() << ");" << endl;
-#endif
+
     }
-#ifdef DEBUG
     std::cerr << endl << "-----------------------" << endl;
-#endif
     return ProcessingOk;
 
 
