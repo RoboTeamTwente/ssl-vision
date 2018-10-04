@@ -40,7 +40,7 @@ void ArucoMarkerfinder::findWhiteSquares(int i, int j, std::vector<int> &x, std:
     }
 
     // if whe are not at the edge.. check left,up,right,down for pixels in the current square
-    if ( (i > 1) && (j > 1) && (i < whitePixels.rows-1) && (j < whitePixels.cols-1) ) {
+    if (iteration < MAXRECURSION && (i > 1) && (j > 1) && (i < whitePixels.rows-1) && (j < whitePixels.cols-1) ) {
         if (whitePixels.at<Vec3b>(i - 1, j) == green) {
             auto d = (unsigned char)( iteration * itColorFactor );
             Vec3b newColor = {d, (unsigned char) (255 - d), d};
@@ -239,7 +239,7 @@ void ArucoMarkerfinder::findMarkers(Mat image, std::vector<int> &markerIds, std:
     }
 
     std::vector<int> xSqMarker;
-    //xSqMarker.reserve(image.rows*image.cols+1);  // Allocate space for 30 items, but vec1 is still empty.
+    //xSqMarker.reserve(image.rows*image.cols+1);
     std::vector<int> ySqMarker;
     //xSqMarker.reserve(image.rows*image.cols+1);
     std::vector<int> startIndSqMarker = {0};

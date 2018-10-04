@@ -20,11 +20,12 @@ public:
     void findMarkers(Mat image, std::vector<int> &markerIds, std::vector<int> &markerX, std::vector<int> &markerY, std::vector<int> &markerTheta);
 
 private:
-    int g_skipPixels = 3;
+    int g_skipPixels = 2;
     int g_whiteMargin = 100;
     int g_minMarkerPixels = 500;
     const int ARUCOSIZE = 3;
     const int NARUCOMARKERS = 32;
+    const int MAXRECURSION = 25000;
 
     void findWhitePixels(int i, int j, std::vector<int> &x, std::vector<int> &y, Vec3b color, Mat result);
     void findWhiteSquares(int i, int j, std::vector<int> &x, std::vector<int> &y, Mat whitePixels, int iteration);
