@@ -53,7 +53,7 @@ std::vector<PosRotId> ArucoDetector::performTrackingOnImage(cv::Mat image, bool 
         std::vector<int> markerIds;
         std::vector<int> markerX;
         std::vector<int> markerY;
-        std::vector<int> markerTheta;
+        std::vector<float> markerTheta;
 
         finder.findMarkers(image, markerIds, markerX, markerY, markerTheta);
 
@@ -65,7 +65,7 @@ std::vector<PosRotId> ArucoDetector::performTrackingOnImage(cv::Mat image, bool 
                 int id = markerIds[i];
                 int x = markerX[i];
                 int y = markerY[i];
-                int angle = markerTheta[i];
+                float angle = markerTheta[i];
 
                 PosRotId posRot = PosRotId(id, x, y, angle);
                 result.insert(result.end(), posRot);

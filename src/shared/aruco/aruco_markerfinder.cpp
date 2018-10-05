@@ -81,7 +81,8 @@ bool ArucoMarkerfinder::findMarkerData(std::vector<int> &x, std::vector<int> &y,
         return false;
     }
 
-    int aIndex = sI, bIndex = sI, cIndex = 0, dIndex = 0, xCenter = 0, yCenter = 0;
+    int aIndex = sI, bIndex = sI, cIndex = 0, dIndex = 0;
+    float xCenter = 0, yCenter = 0;
     float xDst, yDst;
     float distance = 0;
     float distanceTest;
@@ -113,8 +114,8 @@ bool ArucoMarkerfinder::findMarkerData(std::vector<int> &x, std::vector<int> &y,
     // find the center pixel and get a pixel with d = (.5(b-a)) and dot product 0, which should give corner 'c' as the furthest pixel
     float xabDst = x[aIndex] - x[bIndex];
     float yabDst = y[aIndex] - y[bIndex];
-    xCenter = (int)round(0.5*xabDst + x[bIndex]);
-    yCenter = (int)round(0.5*yabDst + y[bIndex]);
+    xCenter = 0.5f*xabDst + x[bIndex];
+    yCenter = 0.5f*yabDst + y[bIndex];
 
     auto xPointTest = (int)(xCenter - yabDst);
     auto yPointTest = (int)(yCenter + xabDst);
@@ -241,7 +242,7 @@ bool ArucoMarkerfinder::findMarkerData(std::vector<int> &x, std::vector<int> &y,
 }
 
 /// finds robot id assigned to the aruco marker data
-void ArucoMarkerfinder::findMarkerId(std::vector<bool> &resultData, std::vector<int> &markerIds) {
+bool ArucoMarkerfinder::findMarkerId(std::vector<bool> &resultData, std::vector<int> &markerIds) {
     //
     //      resultData is stored in the order as seen in the figure below                                           |
     //      _________       _________                                                                               |
@@ -258,6 +259,7 @@ void ArucoMarkerfinder::findMarkerId(std::vector<bool> &resultData, std::vector<
     //      case 3: 8,6,4,2,0           |           | 24(binary) = 11000 -> resultData[0] = 1, resultData[2] = 1    |
     //      case 5: 0,2,4,6,8           |           | n(D) even -> P = 1 -> resultData[7] = 1, resultData[1] = 1    |
     //      case 7: 2,8,4,0,6           |           | }-> [0,1,2,3,7] = "1", [4,5,6,8] = "0"                        |
+    //
 
     int id = 0;
     int parity = 0;
@@ -274,6 +276,7 @@ void ArucoMarkerfinder::findMarkerId(std::vector<bool> &resultData, std::vector<
         }
         if ( (parity % 2 == 1 && (three && five) ) || (parity % 2 == 0 && (!three && !five) ) ) {
             std::cerr << "marker dismissed: parity bit incorrect" << std::endl;
+            return false;
         }
     }
         // case 3:
@@ -288,6 +291,7 @@ void ArucoMarkerfinder::findMarkerId(std::vector<bool> &resultData, std::vector<
         }
         if ( (parity % 2 == 1 && (three && five) ) || (parity % 2 == 0 && (!three && !five) ) ) {
             std::cerr << "marker dismissed: parity bit incorrect" << std::endl;
+            return false;
         }
     }
         // case 5:
@@ -302,6 +306,7 @@ void ArucoMarkerfinder::findMarkerId(std::vector<bool> &resultData, std::vector<
         }
         if ( (parity % 2 == 1 && (three && five) ) || (parity % 2 == 0 && (!three && !five) ) ) {
             std::cerr << "marker dismissed: parity bit incorrect" << std::endl;
+            return false;
         }
     }
         // case 7:
@@ -316,21 +321,21 @@ void ArucoMarkerfinder::findMarkerId(std::vector<bool> &resultData, std::vector<
         }
         if ( (parity % 2 == 1 && (three && five) ) || (parity % 2 == 0 && (!three && !five) ) ) {
             std::cerr << "marker dismissed: parity bit incorrect" << std::endl;
+            return false;
         }
     }
         // else it is not a valid marker
     else {
         std::cerr << "marker dismissed: parity/direction combination incorrect" << std::endl;
-        return;
+        return false;
     }
 
-
-    std::cerr << "id: " << id << std::endl;
-
+    markerIds.push_back(id);
+    return true;
 }
 
 /// finds the robot id, x,y position and rotations of all robots
-void ArucoMarkerfinder::findMarkers(Mat image, std::vector<int> &markerIds, std::vector<int> &markerX, std::vector<int> &markerY, std::vector<int> &markerTheta) {
+void ArucoMarkerfinder::findMarkers(Mat image, std::vector<int> &markerIds, std::vector<int> &markerX, std::vector<int> &markerY, std::vector<float> &markerTheta) {
 
     // create vector of all x- and y-positions of the white pixels
     std::vector<int> xSqMarker;
@@ -360,13 +365,20 @@ void ArucoMarkerfinder::findMarkers(Mat image, std::vector<int> &markerIds, std:
         int startInd = startIndSqMarker[marker];
         int endInd = startIndSqMarker[marker + 1];
         bool isMarker;
+        bool isRobotID = false;
         isMarker = findMarkerData(xSqMarker, ySqMarker, startInd, endInd, image, markerData, posRot);
 
         // if we are dealing with a marker, connect the marker bit data with the robot id
         if (isMarker) {
-            findMarkerId(markerData, markerIds);
+            isRobotID = findMarkerId(markerData, markerIds);
+            if (isRobotID) {
+                markerX.push_back((int)posRot[0]);
+                markerY.push_back((int)posRot[1]);
+                markerTheta.push_back(posRot[2]);
+            }
         }
         markerData.clear();
+        posRot.clear();
     }
 }
 
