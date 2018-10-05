@@ -74,7 +74,7 @@ void ArucoMarkerfinder::findWhiteSquares(int i, int j, std::vector<int> &x, std:
 }
 
 /// for each group of pixels, check if it actually is an aruco marker
-bool ArucoMarkerfinder::findMarkerData(std::vector<int> &x, std::vector<int> &y, int sI, int eI, Mat image, std::vector<int> &markerData, std::vector<float> &posRot) {
+bool ArucoMarkerfinder::findMarkerData(std::vector<int> &x, std::vector<int> &y, int sI, int eI, Mat image, std::vector<bool> &markerData, std::vector<float> &posRot) {
 
     if ( eI-sI < (g_minMarkerPixels/( g_skipPixels*g_skipPixels )) ) {
         // not enough pixels to be an aruco marker, or to determine the data accurately
@@ -164,8 +164,6 @@ bool ArucoMarkerfinder::findMarkerData(std::vector<int> &x, std::vector<int> &y,
     float uvvDot = ux*vvx + uy*vvy;
     float uuvvDot = uux*vvx + uuy*vvy;
 
-
-
     // sidelengths of the square
     float wLength = sqrt(wx*wx + wy*wy);
 
@@ -206,8 +204,8 @@ bool ArucoMarkerfinder::findMarkerData(std::vector<int> &x, std::vector<int> &y,
     double xx;
     double yy;
     Vec3b green = {0,255,0};
-    for (int i = 0; i < ARUCOSIZE; i++) {
-        for (int j = 0; j < ARUCOSIZE; j++) {
+    for (int j = 0; j < ARUCOSIZE; j++) {
+        for (int i = 0; i < ARUCOSIZE; i++) {
             xx = x[aIndex] - ( (i+1.5)*( (ARUCOSIZE-j+0.5)*ux + (j+1.5)*uux ) + (j+1.5)*( (ARUCOSIZE-i+0.5)*vx + (i+1.5)*vvx ) )/( (ARUCOSIZE+2)*(ARUCOSIZE+2) );
             yy = y[aIndex] - ( (i+1.5)*( (ARUCOSIZE-j+0.5)*uy + (j+1.5)*uuy ) + (j+1.5)*( (ARUCOSIZE-i+0.5)*vy + (i+1.5)*vvy ) )/( (ARUCOSIZE+2)*(ARUCOSIZE+2) );
             Mat isWhite = Mat::zeros(1,1,CV_8UC3);
@@ -216,11 +214,11 @@ bool ArucoMarkerfinder::findMarkerData(std::vector<int> &x, std::vector<int> &y,
 
             if ( color == green ) {
                 image.at<Vec3b>((int)round(xx),(int)round(yy)) = {255,127,63};
-                markerData.push_back(1);
+                markerData.push_back(false);
             }
             else {
                 image.at<Vec3b>((int)round(xx),(int)round(yy)) = {127,255,63};
-                markerData.push_back(0);
+                markerData.push_back(true);
             }
 
         }
@@ -243,8 +241,91 @@ bool ArucoMarkerfinder::findMarkerData(std::vector<int> &x, std::vector<int> &y,
 }
 
 /// finds robot id assigned to the aruco marker data
-void ArucoMarkerfinder::findMarkerId(std::vector<int> &resultData, std::vector<int> &markerIds) {
+void ArucoMarkerfinder::findMarkerId(std::vector<bool> &resultData, std::vector<int> &markerIds) {
+    //
+    //      resultData is stored in the order as seen in the figure below                                           |
+    //      _________       _________                                                                               |
+    //                                      D = data                                                                |
+    //      | 0 1 2 |       | D 1 D |       0 = always white                                                        |
+    //      | 3 4 5 |       | P D P |       1 = always black                                                        |
+    //      | 6 7 8 |       | D 0 D |       P = parity:                                                             |
+    //      _________       _________       "n(D) even -> P = 1" | "n(D) odd -> P = 0"                              |
+    //                                                                                                              |
+    //      rotation of the marker is unknown, so the "1" pixel can be in spot 2, 4, 6 or 8                         |
+    //      in the upright position (case 1), data is read in the following order:                                  |
+    //                                  ____________________________________________________________________________|
+    //      case 1: 6,0,4,8,2           | example:  | id = 24, rotation = "case 3" -> resultData[3] = 1             |
+    //      case 3: 8,6,4,2,0           |           | 24(binary) = 11000 -> resultData[0] = 1, resultData[2] = 1    |
+    //      case 5: 0,2,4,6,8           |           | n(D) even -> P = 1 -> resultData[7] = 1, resultData[1] = 1    |
+    //      case 7: 2,8,4,0,6           |           | }-> [0,1,2,3,7] = "1", [4,5,6,8] = "0"                        |
 
+    int id = 0;
+    int parity = 0;
+    bool one = resultData[1], three = resultData[3], five = resultData[5], seven = resultData[7];
+    // case 1:
+    if (one && !seven && ( (three && five) || (!three && !five) )) {
+        for (int i = 0; i < 5; i++) {
+            // D = 6,0,4,8,2
+            int D = (6+i*4) % 10;
+            if (resultData[D]) {
+                id += (int)pow(2, i);
+                parity++;
+            }
+        }
+        if ( (parity % 2 == 1 && (three && five) ) || (parity % 2 == 0 && (!three && !five) ) ) {
+            std::cerr << "marker dismissed: parity bit incorrect" << std::endl;
+        }
+    }
+        // case 3:
+    else if (three && !five && ( (one && seven) || (!one && !seven) )) {
+        for (int i = 0; i < 5; i++) {
+            // D = 8,6,4,2,0
+            int D = 8-2*i;
+            if (resultData[D]) {
+                id += (int)pow(2, i);
+                parity++;
+            }
+        }
+        if ( (parity % 2 == 1 && (three && five) ) || (parity % 2 == 0 && (!three && !five) ) ) {
+            std::cerr << "marker dismissed: parity bit incorrect" << std::endl;
+        }
+    }
+        // case 5:
+    else if (five && !three && ( (one && seven) || (!one && !seven) )) {
+        for (int i = 0; i < 5; i++) {
+            // D = 0,2,4,6,8
+            int D = 2*i;
+            if (resultData[D]) {
+                id += (int)pow(2, i);
+                parity++;
+            }
+        }
+        if ( (parity % 2 == 1 && (three && five) ) || (parity % 2 == 0 && (!three && !five) ) ) {
+            std::cerr << "marker dismissed: parity bit incorrect" << std::endl;
+        }
+    }
+        // case 7:
+    else if (seven && !one && ( (three && five) || (!three && !five) )) {
+        for (int i = 0; i < 5; i++) {
+            // D = 2,8,4,0,6
+            int D = (2+i*6) % 10;
+            if (resultData[D]) {
+                id += (int)pow(2, i);
+                parity++;
+            }
+        }
+        if ( (parity % 2 == 1 && (three && five) ) || (parity % 2 == 0 && (!three && !five) ) ) {
+            std::cerr << "marker dismissed: parity bit incorrect" << std::endl;
+        }
+    }
+        // else it is not a valid marker
+    else {
+        std::cerr << "marker dismissed: parity/direction combination incorrect" << std::endl;
+        return;
+    }
+
+
+    std::cerr << "id: " << id << std::endl;
 
 }
 
@@ -270,9 +351,7 @@ void ArucoMarkerfinder::findMarkers(Mat image, std::vector<int> &markerIds, std:
     }
 
     // create vector for the data to send back
-    std::vector<int> xCorners;
-    std::vector<int> yCorners;
-    std::vector<int> markerData;
+    std::vector<bool> markerData;
     std::vector<float> posRot;
 
     // for all square markers found
@@ -287,6 +366,7 @@ void ArucoMarkerfinder::findMarkers(Mat image, std::vector<int> &markerIds, std:
         if (isMarker) {
             findMarkerId(markerData, markerIds);
         }
+        markerData.clear();
     }
 }
 

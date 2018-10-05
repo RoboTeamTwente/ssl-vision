@@ -21,7 +21,7 @@ public:
 
 private:
     int g_skipPixels = 10;                  // skip this many pixels in the initial blobfinding to increase performance
-    int g_whiteMargin = 110;                // minimum color threshold for a pixel to be determined 'white'
+    int g_whiteMargin = 155;                // minimum color threshold for a pixel to be determined 'white'
     int g_deltaWhiteMargin = 25;            // after one pixel has been found, lower the minimum threshold by this amount
     int g_minMarkerPixels = 500;            // minimum white pixels required to determine marker
     const int ARUCOSIZE = 3;                // gridsize of aruco data
@@ -32,8 +32,8 @@ private:
     bool isWhite(Vec3b &color, int white);
     void findWhitePixels(int i, int j, std::vector<int> &x, std::vector<int> &y, std::vector<int> &index, Mat image);
     void findWhiteSquares(int i, int j, std::vector<int> &x, std::vector<int> &y, Mat whitePixels, int iteration);
-    bool findMarkerData(std::vector<int> &x, std::vector<int> &y, int sI, int eI, Mat image, std::vector<int> &markerData, std::vector<float> &posRot);
-    void findMarkerId(std::vector<int> &resultData, std::vector<int> &markerIds);
+    bool findMarkerData(std::vector<int> &x, std::vector<int> &y, int sI, int eI, Mat image, std::vector<bool> &markerData, std::vector<float> &posRot);
+    void findMarkerId(std::vector<bool> &resultData, std::vector<int> &markerIds);
 
     };
 
