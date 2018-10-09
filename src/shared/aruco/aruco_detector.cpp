@@ -60,7 +60,10 @@ std::vector<PosRotId> ArucoDetector::performTrackingOnImage(cv::Mat image, bool 
 
         dict_mutex.unlock();
         if (!markerIds.empty()) {
+            if (showDebug) {
+                printf("%-12s%-12s%-12s%-12s\n", "ID", "x (pixels)", "y (pixels)", "angle (pi rad)");
 
+            }
             for (int i = 0; i < (int)markerIds.size(); i++) {
                 int id = markerIds[i];
                 int x = markerX[i];
@@ -70,10 +73,18 @@ std::vector<PosRotId> ArucoDetector::performTrackingOnImage(cv::Mat image, bool 
                 PosRotId posRot = PosRotId(id, x, y, angle);
                 result.insert(result.end(), posRot);
 
+                std::string strID = std::to_string( id );
+                std::string strX = std::to_string( x );
+                std::string strY = std::to_string( y );
+                std::string strT = std::to_string( (angle/CV_PI) );
+
+                char const *idid = strID.c_str();
+                char const *xx = strX.c_str();
+                char const *yy = strY.c_str();
+                char const *theta = strT.c_str();
 
                 if (showDebug) {
-                    std::cout << "Marker " << id << " at [" << x << ", " << y <<
-                                 "] with rotation " << angle << std::endl;
+                    printf("%-12s%-12s%-12s%-12s\n", idid, xx, yy, theta);
                 }
 
 

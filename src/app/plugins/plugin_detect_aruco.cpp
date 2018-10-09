@@ -132,7 +132,7 @@ ProcessResult plugin_detect_aruco::process(FrameData *data, RenderOptions *optio
         robot->set_x((float)reg_center.x);
         robot->set_y((float)reg_center.y);
         robot->set_confidence(1);
-        std::cerr << "orientation before compensation: " << pri.getTheta() << std::endl;
+        //std::cerr << "orientation before compensation: " << pri.getTheta() << std::endl;
 
 
         robot->set_orientation((float)-(pri.getTheta() - .5*CV_PI));
@@ -142,7 +142,7 @@ ProcessResult plugin_detect_aruco::process(FrameData *data, RenderOptions *optio
         robot->set_height(0);
         robot->set_pixel_x((float)pri.getX());
         robot->set_pixel_y((float)pri.getY());
-        std::cerr << "Detected robot " << robot->robot_id() << " at (" << robot->x() << ", " << robot->y() << ", " << robot->orientation() << ");" << endl;
+        //std::cerr << "Detected robot " << robot->robot_id() << " at (" << robot->x() << ", " << robot->y() << ", " << robot->orientation() << ");" << endl;
 
     }
     std::cerr << endl << "-----------------------" << endl;
