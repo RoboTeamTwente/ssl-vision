@@ -69,7 +69,7 @@ void ArucoMarkerfinder::createVectors(std::vector<int> &x, std::vector<int> &y, 
 }
 
 /// calculate the dot product between two vectors
-int ArucoMarkerfinder::dotProduct(std::vector<int> &v1, std::vector<int> &v2) {
+int ArucoMarkerfinder::calcDotProduct(std::vector<int> &v1, std::vector<int> &v2) {
     int dot = v1[0] * v2[0] + v1[1] * v2[1];
     return dot;
 }
@@ -87,6 +87,128 @@ float ArucoMarkerfinder::calcCosAngle(float dot, float v0Length, float v1Length)
     return cosAngle;
 }
 
+bool ArucoMarkerfinder::getRobotID(std::vector<bool> &resultData, std::vector<int> &orientation, int &id) {
+
+    //
+    //      resultData is stored in the order as seen in the figure below                                           |
+    //      _________       _________                                                                               |
+    //                                      D = data                                                                |
+    //      | 0 1 2 |       | D 1 D |       0 = always white                                                        |
+    //      | 3 4 5 |       | P D P |       1 = always black                                                        |
+    //      | 6 7 8 |       | D 0 D |       P = parity:                                                             |
+    //      _________       _________       "n(D) even -> P = 1" | "n(D) odd -> P = 0"                              |
+    //                                                                                                              |
+    //      rotation of the marker is unknown, so the "1" pixel can be in spot 2, 4, 6 or 8                         |
+    //      in the upright position (case 1), data is read in the following order:                                  |
+    //                                  ____________________________________________________________________________|
+    //      case 1: 6,0,4,8,2           | example:  | id = 24, rotation = "case 3" -> resultData[3] = 1             |
+    //      case 3: 8,6,4,2,0           |           | 24(binary) = 11000 -> resultData[0] = 1, resultData[2] = 1    |
+    //      case 5: 0,2,4,6,8           |           | n(D) even -> P = 1 -> resultData[7] = 1, resultData[1] = 1    |
+    //      case 7: 2,8,4,0,6           |           | }-> [0,1,2,3,7] = "1", [4,5,6,8] = "0"                        |
+    //
+
+    int parity = 0, startI = 0, factor = 0;
+
+    bool one = resultData[1], three = resultData[3], five = resultData[5], seven = resultData[7];
+    // case 1:
+    if ( one && !seven && ( (three && five) || (!three && !five) ) ) {
+        orientation = {0, 3, 2, 1};
+        startI = 6;
+        factor = 4;
+        if (three && five) parity++;
+
+    } else if ( three && !five && ( (one && seven) || (!one && !seven) ) ) {
+        orientation = {0, 2, 3, 1};
+        startI = 8;
+        factor = -2;
+        if (one && seven) parity++;
+
+    } else if ( five && !three && ( (one && seven) || (!one && !seven) ) ) {
+         orientation = {1, 3, 2, 0};
+        startI = 0;
+        factor = 2;
+        if (one && seven) parity++;
+
+    } else if ( seven && !one && ( (three && five) || (!three && !five) ) ) {
+        orientation = {1, 2, 3, 0};
+        startI = 2;
+        factor = 6;
+        if (three && five) parity++;
+
+    } else {
+        std::cerr << "marker dismissed: parity/direction combination incorrect" << std::endl;
+        return false;
+    }
+
+    for (int i = 0; i < 5; i++) {
+        int D = (startI + i * factor) % 10;
+        if (resultData[D]) {
+            id += (int) pow(2, i);
+            parity++;
+        }
+    }
+
+    if (parity % 2 == 0) {
+        std::cerr << "marker dismissed: parity incorrect" << std::endl;
+        return false;
+    }
+    // all parity data is correct
+    return true;
+}
+
+bool ArucoMarkerfinder::getCenter(float &xCenter, float &yCenter, std::vector<int> corners) {
+
+    auto ax = (float) corners[0], bx = (float) corners[2], cx = (float) corners[4], dx = (float) corners[6];
+    auto ay = (float) corners[1], by = (float) corners[3], cy = (float) corners[5], dy = (float) corners[7];
+
+    // the id is extracted from the data, now we calculate the position of the center and the rotation of the marker
+
+    // calculate the center of the square using vectors:
+    //     a ____ d         vector p = a + t(b-a);      vector q = c + s(d-c);
+    //      |    |
+    //     c|____|b     ->  center of the square is the intersection between the two vectors.
+    //
+    //                  s =     ( (ay-cy)(bx-ax) + (cx-ax)(by-ay) ) / ( (dy-cy)(bx-ax) + (cx-dx)(by-ay) )
+    //            xCenter =     cx + s(dx - cx)
+    //            yCenter =     cy + s(dy - cy)
+
+    if ((dy - cy) * (bx - ax) + (cx - dx) * (by - ay) != 0) {
+        float s = (((ay - cy) * (bx - ax) + (cx - ax) * (by - ay)) /
+                   ((dy - cy) * (bx - ax) + (cx - dx) * (by - ay)));
+        xCenter = cx + s * (dx - cx);
+        yCenter = cy + s * (dy - cy);
+
+    } else {
+        std::cerr << "marker dismissed, divide by zero??: " << (dy - cy) * (bx - ax) + (cx - dx) * (by - ay)
+                  << std::endl;
+        return false;
+    }
+    // normally this should return true..
+    return true;
+}
+
+void ArucoMarkerfinder::getAngle(float &angle, std::vector<int> &orientation, std::vector<int> &corners) {
+
+//      the rotation of the marker is calculated by taking the two corners closest to the direction "1" bit
+//      the direction is calculated by the average average vector of the two corners closest to the "1" bit
+//          and the corners furthest away from this bit.
+
+    float xVector;
+    float yVector;
+    std::vector<float> thetaVector;
+
+// using the two points closest to the "1" bit (orientation vector), calculate the direction
+    for (int i = 0; i < 2; i++) {
+        xVector = corners[(2 * orientation[2 * i])] - corners[(2 * orientation[2 * i + 1])];
+        yVector = corners[(2 * orientation[2 * i] + 1)] - corners[(2 * orientation[2 * i + 1] + 1)];
+
+        if (xVector > 0) thetaVector.push_back(atan(yVector / xVector));
+        else if (xVector < 0) thetaVector.push_back((float) (CV_PI + atan(yVector / xVector)));
+        else thetaVector.push_back((float) (CV_PI * 0.5));
+    }
+    angle = (float) (2 * CV_PI + (thetaVector[0] + thetaVector[1]) * 0.5);
+    while (angle > CV_PI) angle -= 2 * CV_PI;
+}
 
 /// checks if a pixel is white. if it is, find pixels around it and make a blob of white
 void ArucoMarkerfinder::findWhiteBlob(int i, int j, std::vector<int> &x, std::vector<int> &y,
@@ -188,10 +310,10 @@ bool ArucoMarkerfinder::checkIfSquareBlob(std::vector<int> &x, std::vector<int> 
     createVectors(x, y, corners, u, v, uu, vv);
 
     // dot products between vectors
-    int uvDot = dotProduct(u, v);
-    int uuvDot = dotProduct(uu, v);
-    int uvvDot = dotProduct(u, vv);
-    int uuvvDot = dotProduct(uu, vv);
+    int uvDot = calcDotProduct(u, v);
+    int uuvDot = calcDotProduct(uu, v);
+    int uvvDot = calcDotProduct(u, vv);
+    int uuvvDot = calcDotProduct(uu, vv);
 
     // sidelengths of the square
     float uLength = calcVectorLength(u);
@@ -271,163 +393,29 @@ bool ArucoMarkerfinder::findMarkerData(std::vector<bool> &markerData, std::vecto
 }
 
 /// finds robot id assigned to the aruco marker data
-bool ArucoMarkerfinder::findMarkerId(std::vector<bool> &resultData, std::vector<float> &posRotID,
-                                     std::vector<int> &corners) {
-    //
-    //      resultData is stored in the order as seen in the figure below                                           |
-    //      _________       _________                                                                               |
-    //                                      D = data                                                                |
-    //      | 0 1 2 |       | D 1 D |       0 = always white                                                        |
-    //      | 3 4 5 |       | P D P |       1 = always black                                                        |
-    //      | 6 7 8 |       | D 0 D |       P = parity:                                                             |
-    //      _________       _________       "n(D) even -> P = 1" | "n(D) odd -> P = 0"                              |
-    //                                                                                                              |
-    //      rotation of the marker is unknown, so the "1" pixel can be in spot 2, 4, 6 or 8                         |
-    //      in the upright position (case 1), data is read in the following order:                                  |
-    //                                  ____________________________________________________________________________|
-    //      case 1: 6,0,4,8,2           | example:  | id = 24, rotation = "case 3" -> resultData[3] = 1             |
-    //      case 3: 8,6,4,2,0           |           | 24(binary) = 11000 -> resultData[0] = 1, resultData[2] = 1    |
-    //      case 5: 0,2,4,6,8           |           | n(D) even -> P = 1 -> resultData[7] = 1, resultData[1] = 1    |
-    //      case 7: 2,8,4,0,6           |           | }-> [0,1,2,3,7] = "1", [4,5,6,8] = "0"                        |
-    //
+bool ArucoMarkerfinder::findRobotData(std::vector<bool> &resultData, std::vector<float> &posRotID,
+                                      std::vector<int> &corners) {
 
+    std::vector<int> orientation;
     int id = 0;
-    int parity = 0;
-    std::vector<float> orientation;
-
-    bool one = resultData[1], three = resultData[3], five = resultData[5], seven = resultData[7];
-    // case 1:
-    if (one && !seven && ((three && five) || (!three && !five))) {
-
-        orientation = {0, 3, 2, 1};     // variables for determing the angle
-
-        for (int i = 0; i < 5; i++) {
-            // D = 6,0,4,8,2
-            int D = (6 + i * 4) % 10;
-            if (resultData[D]) {
-                id += (int) pow(2, i);
-                parity++;
-            }
-        }
-        if ((parity % 2 == 1 && (three && five)) || (parity % 2 == 0 && (!three && !five))) {
-            std::cerr << "marker dismissed: parity bit incorrect" << std::endl;
-            return false;
-        }
-    }
-        // case 3:
-    else if (three && !five && ((one && seven) || (!one && !seven))) {
-
-        orientation = {0, 2, 3, 1};
-
-        for (int i = 0; i < 5; i++) {
-            // D = 8,6,4,2,0
-            int D = 8 - 2 * i;
-            if (resultData[D]) {
-                id += (int) pow(2, i);
-                parity++;
-            }
-        }
-        if ((parity % 2 == 1 && (three && five)) || (parity % 2 == 0 && (!three && !five))) {
-            std::cerr << "marker dismissed: parity bit incorrect" << std::endl;
-            return false;
-        }
-    }
-        // case 5:
-    else if (five && !three && ((one && seven) || (!one && !seven))) {
-
-        orientation = {1, 3, 2, 0};
-
-        for (int i = 0; i < 5; i++) {
-            // D = 0,2,4,6,8
-            int D = 2 * i;
-            if (resultData[D]) {
-                id += (int) pow(2, i);
-                parity++;
-            }
-        }
-        if ((parity % 2 == 1 && (three && five)) || (parity % 2 == 0 && (!three && !five))) {
-            std::cerr << "marker dismissed: parity bit incorrect" << std::endl;
-            return false;
-        }
-    }
-        // case 7:
-    else if (seven && !one && ((three && five) || (!three && !five))) {
-
-        orientation = {1, 2, 3, 0};
-
-        for (int i = 0; i < 5; i++) {
-            // D = 2,8,4,0,6
-            int D = (2 + i * 6) % 10;
-            if (resultData[D]) {
-                id += (int) pow(2, i);
-                parity++;
-            }
-        }
-        // checking the parity bits: n(D) odd -> P should be 0, n(D) even -> P should be 1
-        if ((parity % 2 == 1 && (three && five)) || (parity % 2 == 0 && (!three && !five))) {
-            std::cerr << "marker dismissed: parity bit incorrect" << std::endl;
-            return false;
-        }
-
-    } else {    // else it is not a marker in our dictionary
-        std::cerr << "marker dismissed: parity/direction combination incorrect" << std::endl;
-        return false;
-    }
-
+    bool validID = getRobotID(resultData, orientation, id);
+    if (!validID) return false;
     posRotID.push_back(id);
 
-    auto ax = (float) corners[0], bx = (float) corners[2], cx = (float) corners[4], dx = (float) corners[6];
-    auto ay = (float) corners[1], by = (float) corners[3], cy = (float) corners[5], dy = (float) corners[7];
+    float xCenter, yCenter;
+    bool centerExists = getCenter(xCenter, yCenter, corners);
+    if (!centerExists) return false;
 
-    // the id is extracted from the data, now we calculate the position of the center and the rotation of the marker
+    posRotID.push_back(xCenter);
+    posRotID.push_back(yCenter);
 
-    // calculate the center of the square using vectors:
-    //     a ____ d         vector p = a + t(b-a);      vector q = c + s(d-c);
-    //      |    |
-    //     c|____|b     ->  center of the square is the intersection between the two vectors.
-    //
-    //                  s =     ( (ay-cy)(bx-ax) + (cx-ax)(by-ay) ) / ( (dy-cy)(bx-ax) + (cx-dx)(by-ay) )
-    //            xCenter =     cx + s(dx - cx)
-    //            yCenter =     cy + s(dy - cy)
-
-    if ((dy - cy) * (bx - ax) + (cx - dx) * (by - ay) != 0) {
-        float s = (((ay - cy) * (bx - ax) + (cx - ax) * (by - ay)) /
-                   ((dy - cy) * (bx - ax) + (cx - dx) * (by - ay)));
-        float xCenter = cx + s * (dx - cx);
-        float yCenter = cy + s * (dy - cy);
-
-        posRotID.push_back(xCenter);
-        posRotID.push_back(yCenter);
-
-    } else {
-        std::cerr << "marker dismissed, divide by zero??: " << (dy - cy) * (bx - ax) + (cx - dx) * (by - ay)
-                  << std::endl;
-        return false;
-    }
-
-    //      the rotation of the marker is calculated by taking the two corners closest to the direction "1" bit
-    //      the direction is calculated by the average average vector of the two corners closest to the "1" bit
-    //          and the corners furthest away from this bit.
-
-    float xVector;
-    float yVector;
-    std::vector<float> thetaVector;
-
-    // using the two points closest to the "1" bit (orientation vector), calculate the direction
-    for (int i = 0; i < 2; i++) {
-        xVector = corners[(int) (2 * orientation[2 * i])] - corners[(int) (2 * orientation[2 * i + 1])];
-        yVector = corners[(int) (2 * orientation[2 * i] + 1)] - corners[(int) (2 * orientation[2 * i + 1] + 1)];
-
-        if (xVector > 0) thetaVector.push_back(atan(yVector / xVector));
-        else if (xVector < 0) thetaVector.push_back((float) (CV_PI + atan(yVector / xVector)));
-        else thetaVector.push_back((float) (CV_PI * 0.5));
-    }
-    auto angle = (float) (2 * CV_PI + (thetaVector[0] + thetaVector[1]) * 0.5);
-    while (angle > CV_PI) angle -= 2 * CV_PI;
-
+    float angle;
+    getAngle(angle, orientation, corners);
     posRotID.push_back(angle);
 
+    // all tests passed! yay, we got ourselves a robot!
     return true;
+
 }
 
 /// finds the robot id, x,y position and rotations of all robots
@@ -470,7 +458,7 @@ void ArucoMarkerfinder::findMarkers(Mat image, std::vector<int> &markerID, std::
         if (!isSquare) continue;
         edgeIsWhite = findMarkerData(markerData, u, v, uu, vv, corners, image);
         if (!edgeIsWhite) continue;
-        isRobotID = findMarkerId(markerData, posRotID, corners);
+        isRobotID = findRobotData(markerData, posRotID, corners);
         if (!isRobotID) continue;
 
         auto id = (int)posRotID[0];

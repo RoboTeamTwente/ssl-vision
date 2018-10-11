@@ -27,8 +27,8 @@ private:
     Vec3b g_LowerWhiteMargin = {90, 90, 90};      // minimum color threshold for a pixel to be determined 'white'
     Vec3b g_upperWhiteMargin = {255, 255, 255};   // maximum color threshold
     Vec3b g_deltaWhiteMargin = {15, 15, 15};           // after one pixel has been found, lower the minimum threshold by this amount
-    float g_maxAngleDeviation = 0.1;
-    float g_maxLengthDeviation = 0.1;
+    float g_maxAngleDeviation = 0.2;
+    float g_maxLengthDeviation = 0.2;
     int g_minMarkerPixels = 100;                // minimum white pixels required to determine marker
     const int ARUCOSIZE = 3;                    // gridsize of aruco data
     const int NARUCOMARKERS = 32;               // amount of markers
@@ -47,11 +47,17 @@ private:
     void createVectors(std::vector<int> &x, std::vector<int> &y, std::vector<int> &index,
                        std::vector<int> &v0, std::vector<int> &v1, std::vector<int> &v2, std::vector<int> &v3);
 
-    int dotProduct(std::vector<int> &v1, std::vector<int> &v2);
+    int calcDotProduct(std::vector<int> &v1, std::vector<int> &v2);
 
     float calcVectorLength(std::vector<int> &v1);
 
     float calcCosAngle(float dot, float v0Length, float v1Length);
+
+    bool getRobotID(std::vector<bool> &resultData, std::vector<int> &orientation, int &id);
+
+    bool getCenter(float &xCenter, float &yCenter, std::vector<int> corners);
+
+    void getAngle(float &angle, std::vector<int> &orientation, std::vector<int> &corners);
 
     void findWhiteBlob(int i, int j, std::vector<int> &x, std::vector<int> &y, std::vector<int> &index, Mat image);
 
@@ -64,7 +70,7 @@ private:
     bool checkIfSquareBlob(std::vector<int> &x, std::vector<int> &y, int startIndex, int endIndex, Mat image,
             std::vector<int> &corners, std::vector<int> &u, std::vector<int> &v, std::vector<int> &uu, std::vector<int> &vv);
 
-    bool findMarkerId(std::vector<bool> &resultData, std::vector<float> &posRotId, std::vector<int> &corners);
+    bool findRobotData(std::vector<bool> &resultData, std::vector<float> &posRotId, std::vector<int> &corners);
 
 };
 
