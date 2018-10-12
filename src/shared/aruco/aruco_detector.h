@@ -8,7 +8,6 @@
 #include <vector>
 #include <string>
 #include "opencv2/opencv.hpp"
-#include "opencv2/aruco.hpp"
 #include <cmath>
 #include <mutex>
 #include "pos_rot_id.h"
@@ -74,8 +73,8 @@ private:
 //    cv::Mat limitRot;
 
     cv::Mat cameraMatrix, distCoeffs;
-    cv::Ptr<cv::aruco::Dictionary> dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50);
-    cv::Ptr<cv::aruco::DetectorParameters> detectorParams = cv::aruco::DetectorParameters::create();
+    //cv::Ptr<cv::aruco::Dictionary> dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50);
+    //cv::Ptr<cv::aruco::DetectorParameters> detectorParams = cv::aruco::DetectorParameters::create();
 };
 
 

@@ -206,7 +206,7 @@ void ArucoMarkerfinder::getAngle(float &angle, std::vector<int> &orientation, st
         else if (xVector < 0) thetaVector.push_back((float) (CV_PI + atan(yVector / xVector)));
         else thetaVector.push_back((float) (CV_PI * 0.5));
     }
-    angle = (float) (2 * CV_PI + (thetaVector[0] + thetaVector[1]) * 0.5);
+    angle = (float) (3.5 * CV_PI + (thetaVector[0] + thetaVector[1]) * 0.5);
     while (angle > CV_PI) angle -= 2 * CV_PI;
 }
 
@@ -467,8 +467,9 @@ void ArucoMarkerfinder::findMarkers(Mat image, std::vector<int> &markerID, std::
         float theta = posRotID[3];
 
         markerID.push_back(id);
-        markerX.push_back(x);
-        markerY.push_back(y);
+        // TODO: x = y & y = x?? wtf??
+        markerX.push_back(y);
+        markerY.push_back(x);
         markerTheta.push_back(theta);
 
         posRotID.clear();

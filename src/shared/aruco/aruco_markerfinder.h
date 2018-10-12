@@ -24,9 +24,9 @@ public:
 
 private:
     int g_skipPixels = 10;                      // skip this many pixels in the initial blobfinding to increase performance
-    Vec3b g_LowerWhiteMargin = {90, 90, 90};      // minimum color threshold for a pixel to be determined 'white'
+    Vec3b g_LowerWhiteMargin = {80, 80, 80};      // minimum color threshold for a pixel to be determined 'white'
     Vec3b g_upperWhiteMargin = {255, 255, 255};   // maximum color threshold
-    Vec3b g_deltaWhiteMargin = {15, 15, 15};           // after one pixel has been found, lower the minimum threshold by this amount
+    Vec3b g_deltaWhiteMargin = {5, 5, 5};           // after one pixel has been found, lower the minimum threshold by this amount
     float g_maxAngleDeviation = 0.2;
     float g_maxLengthDeviation = 0.2;
     int g_minMarkerPixels = 100;                // minimum white pixels required to determine marker

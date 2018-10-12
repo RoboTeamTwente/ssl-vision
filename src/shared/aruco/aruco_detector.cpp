@@ -32,11 +32,11 @@ ArucoDetector::ArucoDetector(int total_markers, int bits) {
 
     cameraMatrix = *camPtr;
     distCoeffs = *distPtr;
-    detectorParams->minMarkerPerimeterRate = 0.05;
-    detectorParams->maxMarkerPerimeterRate = 0.2;
-    detectorParams->adaptiveThreshWinSizeStep = 15;
-    detectorParams->adaptiveThreshWinSizeMin = 10;
-    detectorParams->adaptiveThreshWinSizeMax = 10;
+//    detectorParams->minMarkerPerimeterRate = 0.05;
+//    detectorParams->maxMarkerPerimeterRate = 0.2;
+//    detectorParams->adaptiveThreshWinSizeStep = 15;
+//    detectorParams->adaptiveThreshWinSizeMin = 10;
+//    detectorParams->adaptiveThreshWinSizeMax = 10;
 
 
 }
@@ -76,7 +76,7 @@ std::vector<PosRotId> ArucoDetector::performTrackingOnImage(cv::Mat image, bool 
                 std::string strID = std::to_string( id );
                 std::string strX = std::to_string( x );
                 std::string strY = std::to_string( y );
-                std::string strT = std::to_string( (angle/CV_PI) );
+                std::string strT = std::to_string( (angle) );
 
                 char const *idid = strID.c_str();
                 char const *xx = strX.c_str();
