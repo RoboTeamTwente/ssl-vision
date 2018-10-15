@@ -5,7 +5,21 @@
 
 #include "aruco_markerfinder.h"
 
+
 ArucoMarkerfinder::ArucoMarkerfinder() = default;
+
+void ArucoMarkerfinder::setG_LowerWhiteMargin(const Vec3b &g_LowerWhiteMargin) {
+    ArucoMarkerfinder::g_LowerWhiteMargin = g_LowerWhiteMargin;
+}
+
+void ArucoMarkerfinder::setG_upperWhiteMargin(const Vec3b &g_upperWhiteMargin) {
+    ArucoMarkerfinder::g_upperWhiteMargin = g_upperWhiteMargin;
+}
+
+void ArucoMarkerfinder::setG_deltaWhiteMargin(const Vec3b &g_deltaWhiteMargin) {
+    ArucoMarkerfinder::g_deltaWhiteMargin = g_deltaWhiteMargin;
+}
+
 
 /// checks if a color is within certain bounds, input: (color, lower bound, upper bound)
 bool ArucoMarkerfinder::isColor(Vec3b color, Vec3b lowerBound, Vec3b upperBound) {
@@ -476,4 +490,5 @@ void ArucoMarkerfinder::findMarkers(Mat image, std::vector<int> &markerID, std::
         corners.clear();
     }
 }
+
 

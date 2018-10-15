@@ -43,6 +43,10 @@ protected:
     VarInt * marker_bits;
     VarInt * total_markers;
     VarInt * markers_per_team;
+    VarInt * lower_blue_margin;
+    VarInt * lower_green_margin;
+    VarInt * lower_red_margin;
+    VarInt * delta_margin;
 
 public:
     plugin_detect_aruco_settings() {
@@ -51,6 +55,10 @@ public:
         _settings->addChild(marker_bits = new VarInt("Marker bits", 3, 3, 10));
         _settings->addChild(total_markers = new VarInt("Total Markers", 32,0));
         _settings->addChild(markers_per_team = new VarInt("Markers per Team", 16, 1));
+        _settings->addChild(lower_blue_margin = new VarInt("Blue Margin",100,0,255));
+        _settings->addChild(lower_green_margin = new VarInt("Green Margin",100,0,255));
+        _settings->addChild(lower_red_margin = new VarInt("Red Margin",100,0,255));
+        _settings->addChild(delta_margin = new VarInt("Delta Margin",10,0,31));
     }
 
     VarList * getSettings() {
@@ -67,6 +75,10 @@ protected:
     int _marker_bits;
     int _total_markers;
     int _markers_per_team;
+    unsigned char _lower_blue_margin;
+    unsigned char _lower_green_margin;
+    unsigned char _lower_red_margin;
+    unsigned char _delta_margin;
 
     VarNotifier _notifier;
     plugin_detect_aruco_settings * _settings;
