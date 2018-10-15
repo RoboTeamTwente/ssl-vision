@@ -16,15 +16,13 @@
 using namespace cv;
 
 class ArucoMarkerfinder {
+
 public:
     ArucoMarkerfinder();
 
     void findMarkers(Mat image, std::vector<int> &markerIds, std::vector<int> &markerX, std::vector<int> &markerY,
                      std::vector<float> &markerTheta);
 
-private:
-    int g_skipPixels = 10;                      // skip this many pixels in the initial blobfinding to increase performance
-public:
     void setG_LowerWhiteMargin(const Vec3b &g_LowerWhiteMargin);
 
     void setG_upperWhiteMargin(const Vec3b &g_upperWhiteMargin);
@@ -32,7 +30,7 @@ public:
     void setG_deltaWhiteMargin(const Vec3b &g_deltaWhiteMargin);
 
 private:
-
+    int g_skipPixels = 10;                      // skip this many pixels in the initial blobfinding to increase performance
     Vec3b g_LowerWhiteMargin;                   // minimum color threshold for a pixel to be determined 'white'
     Vec3b g_upperWhiteMargin;                   // maximum color threshold
     Vec3b g_deltaWhiteMargin;                   // after one pixel has been found, lower the minimum threshold by this amount
@@ -49,9 +47,9 @@ private:
     int findFurthestPixel(int xRelative, int yRelative, int startIndex, int endIndex, std::vector<int> &x,
                           std::vector<int> &y);
 
-    std::vector<int> findOppositeCorner(int xRelative, int yRelative, int startIndex, int endIndex, std::vector<int> &x,
-                           std::vector<int> &y,
-                           Vec3b &lowerBound, Vec3b &upperBound, Mat image, Vec3b &setColor);
+    void findOppositeCorner(int xRelative, int yRelative, int startIndex, int endIndex, std::vector<int> &x,
+                           std::vector<int> &y, Vec3b &lowerBound, Vec3b &upperBound, std::vector<int> &corners,
+                           Mat image, Vec3b &setColor);
 
     void createVectors(std::vector<int> &x, std::vector<int> &y, std::vector<int> &index,
                        std::vector<int> &v0, std::vector<int> &v1, std::vector<int> &v2, std::vector<int> &v3);
@@ -61,6 +59,8 @@ private:
     float calcVectorLength(std::vector<int> &v1);
 
     float calcCosAngle(float dot, float v0Length, float v1Length);
+
+    bool isSquareMarker(std::vector<int> &u, std::vector<int> &v, std::vector<int> &uu, std::vector<int> &vv);
 
     bool getRobotID(std::vector<bool> &resultData, std::vector<int> &orientation, int &id);
 

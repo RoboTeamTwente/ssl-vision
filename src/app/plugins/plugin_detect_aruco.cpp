@@ -44,9 +44,6 @@ plugin_detect_aruco::plugin_detect_aruco(FrameBuffer * _buffer, const CameraPara
         : VisionPlugin(_buffer), camera_parameters(camera_params), field(field)
 {
 
-
-
-
     _settings = new plugin_detect_aruco_settings();
     _notifier.addRecursive(_settings->getSettings());
 
@@ -56,7 +53,6 @@ plugin_detect_aruco::plugin_detect_aruco(FrameBuffer * _buffer, const CameraPara
     _markers_per_team = _settings->markers_per_team->getInt();
     detector = new ArucoDetector();
     filter = new RunFilter(30,25);
-
 
 }
 
