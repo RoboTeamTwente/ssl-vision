@@ -1,6 +1,6 @@
 
 //
-// Created by thijs on 2-10-18.
+// Created by Thijs Luttikhuis on 2-10-18.
 //
 
 #include "aruco_markerfinder.h"

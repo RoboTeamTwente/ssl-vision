@@ -1,5 +1,5 @@
 //
-// Created by thijs on 2-10-18.
+// Created by Thijs Luttikhuis on 2-10-18.
 //
 
 #ifndef SSL_VISION_ARUCO_MARKERFINDER_H

@@ -1,5 +1,5 @@
 //
-// Created by wouter on 3/26/18.
+// Created by Wouter TimmerMans on 3/26/18.
 //
 
 #ifndef SSL_VISION_PLUGIN_DETECT_ARUCO_H
