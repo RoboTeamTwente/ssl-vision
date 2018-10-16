@@ -480,9 +480,8 @@ void ArucoMarkerfinder::findMarkers(Mat image, std::vector<int> &markerID, std::
         float theta = posRotID[3];
 
         markerID.push_back(id);
-        // TODO: x = y & y = x?? wtf??
-        markerX.push_back(y);
-        markerY.push_back(x);
+        markerX.push_back(x);
+        markerY.push_back(y);
         markerTheta.push_back(theta);
 
         posRotID.clear();

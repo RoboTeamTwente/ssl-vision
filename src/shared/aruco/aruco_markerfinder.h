@@ -37,8 +37,7 @@ private:
     float g_maxAngleDeviation = 0.2;
     float g_maxLengthDeviation = 0.2;
     int g_minMarkerPixels = 100;                // minimum white pixels required to determine marker
-    const int ARUCOSIZE = 3;                    // gridsize of aruco data
-    const int NARUCOMARKERS = 32;               // amount of markers
+    const int ARUCOSIZE = 3;                    // data-gridsize of aruco data
     const int MAXRECURSION = 25000;             // hotfix for segmentation faults (139) at recursion depth 26190..
 
 
