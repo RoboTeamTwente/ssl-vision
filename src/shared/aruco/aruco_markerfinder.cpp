@@ -273,6 +273,7 @@ void ArucoMarkerfinder::getAngle(float &angle, std::vector<int> &orientation, st
     }
     angle = (float) (3.5 * CV_PI + (thetaVector[0] + thetaVector[1]) * 0.5);
     while (angle > CV_PI) angle -= 2 * CV_PI;
+    angle = -angle;
 }
 
 /// checks if a pixel is white. if it is, find pixels around it and make a blob of white
@@ -480,8 +481,8 @@ void ArucoMarkerfinder::findMarkers(Mat image, std::vector<int> &markerID, std::
         float theta = posRotID[3];
 
         markerID.push_back(id);
-        markerX.push_back(x);
-        markerY.push_back(y);
+        markerX.push_back(y);
+        markerY.push_back(x);
         markerTheta.push_back(theta);
 
         posRotID.clear();
