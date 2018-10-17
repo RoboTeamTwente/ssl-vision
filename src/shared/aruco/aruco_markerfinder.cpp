@@ -522,8 +522,6 @@ void ArucoMarkerfinder::findMarkers(Mat image, std::vector<int> &markerID, std::
         auto y = (int) round(posRotID[2]);
         float theta = posRotID[3];
 
-        id+=16;
-        if (id>31) id-=32;
         markerID.push_back(id);
         markerX.push_back(y);
         markerY.push_back(x);

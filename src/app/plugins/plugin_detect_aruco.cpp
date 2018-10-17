@@ -116,10 +116,10 @@ ProcessResult plugin_detect_aruco::process(FrameData *data, RenderOptions *optio
         vector2d reg_center(reg_center3d.x,reg_center3d.y);
         SSL_DetectionRobot*  robot = nullptr;
         if(pri.getID() >= _markers_per_team) {
-            robot = robots_blue->Add();
+            robot = robots_yellow->Add();
             robot->set_robot_id((unsigned int)(pri.getID()-_markers_per_team));
         } else {
-            robot = robots_yellow->Add();
+            robot = robots_blue->Add();
             robot->set_robot_id((unsigned int)pri.getID());
         }
         robot->set_x((float)reg_center.x);
