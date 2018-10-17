@@ -12,6 +12,7 @@
 #include <iostream>
 #include <vector>
 #include <utility>
+#include <queue>
 
 using namespace cv;
 
@@ -31,14 +32,14 @@ public:
 
 private:
     int g_skipPixels = 10;                      // skip this many pixels in the initial blobfinding to increase performance
-    Vec3b g_LowerWhiteMargin;                   // minimum color threshold for a pixel to be determined 'white'
+    Vec3b g_lowerWhiteMargin;                   // minimum color threshold for a pixel to be determined 'white'
     Vec3b g_upperWhiteMargin;                   // maximum color threshold
     Vec3b g_deltaWhiteMargin;                   // after one pixel has been found, lower the minimum threshold by this amount
     float g_maxAngleDeviation = 0.2;
     float g_maxLengthDeviation = 0.2;
     int g_minMarkerPixels = 100;                // minimum white pixels required to determine marker
     const int ARUCOSIZE = 3;                    // data-gridsize of aruco data
-    const int MAXRECURSION = 25000;             // hotfix for segmentation faults (139) at recursion depth 26190..
+    const int g_maxPixelsPerMarker = 25000;     // hotfix for segmentation faults (139) at recursion depth 26190..
 
 
     bool isColor(Vec3b color, Vec3b lowerBound, Vec3b upperBound);

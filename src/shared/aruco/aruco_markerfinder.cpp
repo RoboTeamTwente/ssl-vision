@@ -9,7 +9,7 @@
 ArucoMarkerfinder::ArucoMarkerfinder() = default;
 
 void ArucoMarkerfinder::setG_LowerWhiteMargin(const Vec3b &g_LowerWhiteMargin) {
-    ArucoMarkerfinder::g_LowerWhiteMargin = g_LowerWhiteMargin;
+    ArucoMarkerfinder::g_lowerWhiteMargin = g_LowerWhiteMargin;
 }
 
 void ArucoMarkerfinder::setG_upperWhiteMargin(const Vec3b &g_upperWhiteMargin) {
@@ -52,9 +52,9 @@ int ArucoMarkerfinder::findFurthestPixel(int xRelative, int yRelative, int start
 
 /// finds the opposite corner of a (presumably) square blob of pixels
 void ArucoMarkerfinder::findOppositeCorner(int xRelative, int yRelative, int startIndex, int endIndex,
-                                                       std::vector<int> &x, std::vector<int> &y,
-                                                       Vec3b &lowerBound, Vec3b &upperBound, std::vector<int> &corners,
-                                                       Mat image, Vec3b &setColor) {
+                                           std::vector<int> &x, std::vector<int> &y,
+                                           Vec3b &lowerBound, Vec3b &upperBound, std::vector<int> &corners,
+                                           Mat image, Vec3b &setColor) {
 
     // find opposite corner within blob
     int furthestIndex = findFurthestPixel(xRelative, yRelative, startIndex, endIndex, x, y);
@@ -65,7 +65,7 @@ void ArucoMarkerfinder::findOppositeCorner(int xRelative, int yRelative, int sta
         std::vector<int> xCandidatePixels = {x[furthestIndex]}, yCandidatePixels = {y[furthestIndex]};
 
         groupWhitePixels(x[furthestIndex], y[furthestIndex], xCandidatePixels, yCandidatePixels, lowerBound, upperBound,
-                         std::move(image), setColor, MAXRECURSION - maxPixels);
+                         std::move(image), setColor, g_maxPixelsPerMarker - maxPixels);
 
         // find the furthest corner again using these new pixels
         auto candidateMaxIndex = (int) (xCandidatePixels.size() - 1);
@@ -171,7 +171,7 @@ bool ArucoMarkerfinder::getRobotID(std::vector<bool> &resultData, std::vector<in
     //
 
     int parity = 0, startI = 0, factor = 0;
-
+    // TODO: fix names
     bool one = resultData[1], three = resultData[3], five = resultData[5], seven = resultData[7];
     // case 1:
     if ( one && !seven && ( (three && five) || (!three && !five) ) ) {
@@ -272,8 +272,8 @@ void ArucoMarkerfinder::getAngle(float &angle, std::vector<int> &orientation, st
         else thetaVector.push_back((float) (CV_PI * 0.5));
     }
     angle = (float) (3.5 * CV_PI + (thetaVector[0] + thetaVector[1]) * 0.5);
-    while (angle > CV_PI) angle -= 2 * CV_PI;
-    angle = -angle;
+    while (angle > 2*CV_PI) angle -= 2 * CV_PI;
+    angle = -angle + CV_PI;
 }
 
 /// checks if a pixel is white. if it is, find pixels around it and make a blob of white
@@ -281,7 +281,7 @@ void ArucoMarkerfinder::findWhiteBlob(int i, int j, std::vector<int> &x, std::ve
                                       std::vector<int> &index, Mat image) {
 
     auto &color = image.at<Vec3b>(i, j);
-    Vec3b lowerBound = g_LowerWhiteMargin, upperBound = g_upperWhiteMargin;
+    Vec3b lowerBound = g_lowerWhiteMargin, upperBound = g_upperWhiteMargin;
     if (isColor(color, lowerBound, upperBound)) {
         // if a white pixels is found, create a grouped blob of pixels,
         Vec3b setColor = {0, 255, 0};
@@ -293,12 +293,50 @@ void ArucoMarkerfinder::findWhiteBlob(int i, int j, std::vector<int> &x, std::ve
 /// recursively groups white pixels
 void ArucoMarkerfinder::groupWhitePixels(int i, int j, std::vector<int> &x, std::vector<int> &y,
                                          Vec3b lowerBound, Vec3b upperBound, Mat image, Vec3b setColor, int iteration) {
+
+    std::queue<int> xQueue, yQueue;
+    xQueue.push(i);
+    yQueue.push(j);
+
+    while (!xQueue.empty()) {
+        i = xQueue.front();
+        j = yQueue.front();
+        x.push_back(i);
+        y.push_back(j);
+        if ((i > 1) && (j > 1) && (i < image.rows - 1) && (j < image.cols - 1)) {
+
+            int ii = 0;
+            for (int jj : {1, 0, -1, 0}) {          // check 'up left down right'
+                Vec3b color = image.at<Vec3b>(i - ii, j - jj);
+                if (isColor(color, lowerBound, upperBound)) {
+                    image.at<Vec3b>(i - ii, j - jj) = setColor;
+
+                    xQueue.push(i - ii);
+                    yQueue.push(j - jj);
+                }
+                ii = jj;
+
+            }
+        }
+        xQueue.pop();
+        yQueue.pop();
+    }
+
+
+}
+
+
+/*
+void ArucoMarkerfinder::groupWhitePixels(int i, int j, std::vector<int> &x, std::vector<int> &y,
+                                         Vec3b lowerBound, Vec3b upperBound, Mat image, Vec3b setColor, int iteration) {
+
+    // TODO: fix segmentation fault at recursion depth > 26190
     // push the current pixel data for this blob/square into a vector, so it can be used later
-    x.push_back(i);
-    y.push_back(j);
+        x.push_back(i);
+        y.push_back(j);
 
     // if whe are not at the edge.. check left,up,right,down for pixels in the current square
-    if (iteration < MAXRECURSION && (i > 1) && (j > 1) && (i < image.rows - 1) && (j < image.cols - 1)) {
+    if (iteration < g_maxPixelsPerMarker && (i > 1) && (j > 1) && (i < image.rows - 1) && (j < image.cols - 1)) {
         // if the pixel at i-ii,j-jj is white, mark it with color green and check the squares around that pixel
         int ii = 0;
         for (int jj : {1, 0, -1, 0}) {          // check 'up left down right'
@@ -312,6 +350,7 @@ void ArucoMarkerfinder::groupWhitePixels(int i, int j, std::vector<int> &x, std:
         }
     }
 }
+*/
 
 /// for each group of pixels, check if it actually is an aruco marker
 bool ArucoMarkerfinder::checkIfSquareBlob(std::vector<int> &x, std::vector<int> &y, int startIndex, int endIndex,
@@ -322,7 +361,7 @@ bool ArucoMarkerfinder::checkIfSquareBlob(std::vector<int> &x, std::vector<int> 
         std::cerr << "marker dismissed: not enough pixels" << std::endl;
         return false;
     }
-    Vec3b lowerBound = g_LowerWhiteMargin - g_deltaWhiteMargin, upperBound = g_upperWhiteMargin;
+    Vec3b lowerBound = g_lowerWhiteMargin - g_deltaWhiteMargin, upperBound = g_upperWhiteMargin;
     Vec3b setColor = {220, 220, 0};
 
     float xCenter, yCenter;
@@ -330,11 +369,11 @@ bool ArucoMarkerfinder::checkIfSquareBlob(std::vector<int> &x, std::vector<int> 
 
     // find the pixel furthest away from the starting index and push the index back into corners
     findOppositeCorner(x[startIndex], y[startIndex], startIndex, endIndex, x, y, lowerBound, upperBound,
-            corners, image, setColor);
+                       corners, image, setColor);
 
     // find the pixel furthest away from the pixel found above and push the index back into corners
     findOppositeCorner(corners[0], corners[1], startIndex, endIndex, x, y, lowerBound, upperBound,
-            corners, image, setColor);
+                       corners, image, setColor);
 
     // find the center pixel of the first two corners
     float xabDst = corners[0] - corners[2];
@@ -344,11 +383,11 @@ bool ArucoMarkerfinder::checkIfSquareBlob(std::vector<int> &x, std::vector<int> 
 
     // find the third corner
     findOppositeCorner((int)(xCenter - yabDst), (int)(yCenter + xabDst), startIndex, endIndex, x, y,
-            lowerBound, upperBound, corners, image, setColor);
+                       lowerBound, upperBound, corners, image, setColor);
 
     // find the last corner, which is the furthest pixel from the corner found above
     findOppositeCorner(corners[4], corners[5], startIndex, endIndex, x, y, lowerBound, upperBound,
-            corners, image, setColor);
+                       corners, image, setColor);
 
     // save the corner data to corners
     for (int i = 0; i < 4; i++) {
@@ -414,9 +453,11 @@ bool ArucoMarkerfinder::findRobotData(std::vector<bool> &resultData, std::vector
                                       std::vector<int> &corners) {
 
     std::vector<int> orientation;
+
     int id = 0;
     bool validID = getRobotID(resultData, orientation, id);
     if (!validID) return false;
+
     posRotID.push_back(id);
 
     float xCenter, yCenter;
@@ -428,6 +469,7 @@ bool ArucoMarkerfinder::findRobotData(std::vector<bool> &resultData, std::vector
 
     float angle;
     getAngle(angle, orientation, corners);
+
     posRotID.push_back(angle);
 
     // all tests passed! yay, we got ourselves a robot!
@@ -480,6 +522,8 @@ void ArucoMarkerfinder::findMarkers(Mat image, std::vector<int> &markerID, std::
         auto y = (int) round(posRotID[2]);
         float theta = posRotID[3];
 
+        id+=16;
+        if (id>31) id-=32;
         markerID.push_back(id);
         markerX.push_back(y);
         markerY.push_back(x);
@@ -487,7 +531,9 @@ void ArucoMarkerfinder::findMarkers(Mat image, std::vector<int> &markerID, std::
 
         posRotID.clear();
         corners.clear();
+
     }
+
 }
 
 
