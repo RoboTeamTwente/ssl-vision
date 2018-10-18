@@ -33,7 +33,7 @@ public:
     /// \returns A vector containing PosRotIds for each marker that has been observed in this frame.
     //std::vector<PosRotId> performTracking(bool showDebug);
 
-    std::vector<PosRotId> performTrackingOnImage(cv::Mat image, bool showDebug);
+    std::vector<PosRotId> performTrackingOnImage(cv::Mat image);
     void setLowerWhiteMargin(const unsigned char &blue, const unsigned char &green, const unsigned char &red);
     void setDeltaMargin(const unsigned char &delta_margin);
     void setUpperWhiteMargin();

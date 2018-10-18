@@ -11,8 +11,8 @@
 #include <math.h>
 #include <iostream>
 #include <vector>
-#include <utility>
 #include <queue>
+
 using namespace cv;
 
 class ArucoMarkerfinder {
@@ -38,9 +38,6 @@ private:
     float g_maxLengthDeviation = 0.2;
     int g_minMarkerPixels = 100;                // Minimum white pixels required to determine marker
     const int ARUCOSIZE = 3;                    // Data-gridsize of aruco data
-    const int g_maxPixelsPerMarker = 25000;     // Hotfix for segmentation faults (139) at recursion depth 26190..
-    bool debug{};
-
 
     bool isColor(Vec3b color, Vec3b lowerBound, Vec3b upperBound);
 

@@ -27,13 +27,12 @@ ArucoDetector::ArucoDetector() {
 }
 
 
-std::vector<PosRotId> ArucoDetector::performTrackingOnImage(cv::Mat image, bool showDebug) {
+std::vector<PosRotId> ArucoDetector::performTrackingOnImage(cv::Mat image) {
 
     std::vector<PosRotId> result = std::vector<PosRotId>();
 
     if (!image.empty()) {
         dict_mutex.lock();
-        auto tick = (double) cv::getTickCount();
 
         std::vector<int> markerIds;
         std::vector<int> markerX;
@@ -45,12 +44,12 @@ std::vector<PosRotId> ArucoDetector::performTrackingOnImage(cv::Mat image, bool 
         finder.setG_deltaWhiteMargin(delta_margin);
         finder.findMarkers(image, markerIds, markerX, markerY, markerTheta);
 
-
         dict_mutex.unlock();
+
         if (!markerIds.empty()) {
-            if (showDebug) {
-                printf("%-12s%-12s%-12s%-12s\n", "ID", "x (pixels)", "y (pixels)", "angle (pi rad)");
-            }
+#ifdef DEBUG
+            printf("%-12s%-12s%-12s%-12s\n", "ID", "x (pixels)", "y (pixels)", "angle (pi rad)");
+#endif
             for (int i = 0; i < (int)markerIds.size(); i++) {
                 int id = markerIds[i];
                 int x = markerX[i];
@@ -60,8 +59,7 @@ std::vector<PosRotId> ArucoDetector::performTrackingOnImage(cv::Mat image, bool 
                 PosRotId posRot = PosRotId(id, x, y, angle);
                 result.insert(result.end(), posRot);
 
-                if (showDebug) {
-
+#ifdef DEBUG
                     std::string strID = std::to_string( id );
                     std::string strX = std::to_string( x );
                     std::string strY = std::to_string( y );
@@ -73,21 +71,8 @@ std::vector<PosRotId> ArucoDetector::performTrackingOnImage(cv::Mat image, bool 
                     char const *theta = strT.c_str();
 
                     printf("%-12s%-12s%-12s%-12s\n", idid, xx, yy, theta);
-                }
-
-
+#endif
             }
-            if (showDebug) {
-                std::cerr << std::endl << "========= END OF DETECTION ========" << std::endl << std::endl;
-            }
-        }
-
-        double currentTime = ((double) cv::getTickCount() - tick) / cv::getTickFrequency();
-        totalTime += currentTime;
-        totalIterations++;
-        if (totalIterations % 30 == 0) {
-            std::cout << "Detection Time = " << currentTime * 1000 << " ms "
-                      << "(Mean = " << 1000 * totalTime / double(totalIterations) << " ms)" << std::endl;
         }
     }
     return result;

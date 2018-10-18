@@ -26,9 +26,8 @@ void RunFilter::filter(std::vector<PosRotId> &input) {
         }
         history.erase(history.begin());
     }
-    for (auto it = input.begin(); it != input.end(); it++) {
+    for (auto &bot : input) {
     //for ( PosRotId bot : input) {
-        PosRotId& bot = *it;
         counters[bot.getID()]++;
         int count = counters[bot.getID()];
         if (count > threshold) {
@@ -100,7 +99,7 @@ ProcessResult plugin_detect_aruco::process(FrameData *data, RenderOptions *optio
             CV_8UC3,
             data->video.getData());
 
-    vector<PosRotId> results = detector->performTrackingOnImage(img, true);
+    vector<PosRotId> results = detector->performTrackingOnImage(img);
     filter->filter(results);
     detection_frame->clear_robots_blue();
     detection_frame->clear_robots_yellow();
@@ -125,8 +124,6 @@ ProcessResult plugin_detect_aruco::process(FrameData *data, RenderOptions *optio
         robot->set_x((float)reg_center.x);
         robot->set_y((float)reg_center.y);
         robot->set_confidence(1);
-        //std::cerr << "orientation before compensation: " << pri.getTheta() << std::endl;
-
 
         robot->set_orientation((float)-(pri.getTheta() - .5*CV_PI));
         if (robot->orientation() > (float)CV_PI) robot->set_orientation((float)(robot->orientation()-(2*CV_PI)));
@@ -135,10 +132,8 @@ ProcessResult plugin_detect_aruco::process(FrameData *data, RenderOptions *optio
         robot->set_height(0);
         robot->set_pixel_x((float)pri.getX());
         robot->set_pixel_y((float)pri.getY());
-        //std::cerr << "Detected robot " << robot->robot_id() << " at (" << robot->x() << ", " << robot->y() << ", " << robot->orientation() << ");" << endl;
 
     }
-    std::cerr << endl << "-----------------------" << endl;
     return ProcessingOk;
 
 
