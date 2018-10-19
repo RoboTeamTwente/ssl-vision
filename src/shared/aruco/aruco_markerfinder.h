@@ -12,7 +12,7 @@
 #include <iostream>
 #include <vector>
 #include <queue>
-
+#define DEBUG
 using namespace cv;
 
 class ArucoMarkerfinder {
@@ -30,6 +30,7 @@ public:
     void setG_deltaWhiteMargin(const Vec3b &g_deltaWhiteMargin);
 
 private:
+    int g_pixFromEdge = 2;
     int g_skipPixels = 10;                      // Skip this many pixels in the initial blobfinding to increase performance
     Vec3b g_lowerWhiteMargin;                   // Minimum color threshold for a pixel to be determined 'white'
     Vec3b g_upperWhiteMargin;                   // Maximum color threshold
