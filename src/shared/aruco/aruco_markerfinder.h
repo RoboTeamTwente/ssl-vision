@@ -17,67 +17,69 @@ using namespace cv;
 
 class ArucoMarkerfinder {
 
-public:
-    ArucoMarkerfinder() = default;
+    public:
+        ArucoMarkerfinder() = default;
 
-    void findMarkers(Mat image, std::vector<int> &markerIds, std::vector<int> &markerX, std::vector<int> &markerY,
-                     std::vector<float> &markerTheta);
+        void findMarkers(Mat image, std::vector<int> &markerIds, std::vector<int> &markerX, std::vector<int> &markerY,
+                std::vector<float> &markerTheta, std::vector<float> &confidence);
 
-    void setG_LowerWhiteMargin(const Vec3b &g_LowerWhiteMargin);
+        void setG_LowerWhiteMargin(const Vec3b &g_LowerWhiteMargin);
 
-    void setG_upperWhiteMargin(const Vec3b &g_upperWhiteMargin);
+        void setG_upperWhiteMargin(const Vec3b &g_upperWhiteMargin);
 
-    void setG_deltaWhiteMargin(const Vec3b &g_deltaWhiteMargin);
+        void setG_deltaWhiteMargin(const Vec3b &g_deltaWhiteMargin);
 
-private:
-    int g_pixFromEdge = 2;
-    int g_skipPixels = 10;                      // Skip this many pixels in the initial blobfinding to increase performance
-    Vec3b g_lowerWhiteMargin;                   // Minimum color threshold for a pixel to be determined 'white'
-    Vec3b g_upperWhiteMargin;                   // Maximum color threshold
-    Vec3b g_deltaWhiteMargin;                   // After one pixel has been found, lower the minimum threshold by this amount
-    float g_maxAngleDeviation = 0.2;
-    float g_maxLengthDeviation = 0.2;
-    int g_minMarkerPixels = 100;                // Minimum white pixels required to determine marker
-    const int ARUCOSIZE = 3;                    // Data-gridsize of aruco data
+    private:
+        int g_pixFromEdge = 2;
+        int g_skipPixels = 10;                      // Skip this many pixels in the initial blobfinding to increase performance
+        Vec3b g_lowerWhiteMargin;                   // Minimum color threshold for a pixel to be determined 'white'
+        Vec3b g_upperWhiteMargin;                   // Maximum color threshold
+        Vec3b g_deltaWhiteMargin;                   // After one pixel has been found, lower the minimum threshold by this amount
+        float g_maxAngleDeviation = 0.2;
+        float g_maxLengthDeviation = 0.2;
+        int g_minMarkerPixels = 100;                // Minimum white pixels required to determine marker
+        const int ARUCOSIZE = 3;                    // Data-gridsize of aruco data
 
-    bool isColor(Vec3b color, Vec3b lowerBound, Vec3b upperBound);
+        bool isColor(Vec3b color, Vec3b lowerBound, Vec3b upperBound);
 
-    int findFurthestPixel(int xRelative, int yRelative, int startIndex, int endIndex, std::vector<int> &x,
-                          std::vector<int> &y);
+        int findFurthestPixel(int xRelative, int yRelative, int startIndex, int endIndex, std::vector<int> &x,
+                std::vector<int> &y);
 
-    void findOppositeCorner(int xRelative, int yRelative, int startIndex, int endIndex, std::vector<int> &x,
-                           std::vector<int> &y, Vec3b &lowerBound, Vec3b &upperBound, std::vector<int> &corners,
-                           Mat image, Vec3b &setColor);
+        void findOppositeCorner(int xRelative, int yRelative, int startIndex, int endIndex, std::vector<int> &x,
+                std::vector<int> &y, Vec3b &lowerBound, Vec3b &upperBound, std::vector<int> &corners,
+                Mat image, Vec3b &setColor);
 
-    void createVectors(std::vector<int> &x, std::vector<int> &y, std::vector<int> &index,
-                       std::vector<int> &v0, std::vector<int> &v1, std::vector<int> &v2, std::vector<int> &v3);
+        void createVectors(std::vector<int> &x, std::vector<int> &y, std::vector<int> &index,
+                std::vector<int> &v0, std::vector<int> &v1, std::vector<int> &v2, std::vector<int> &v3);
 
-    int calcDotProduct(std::vector<int> &v1, std::vector<int> &v2);
+        int calcDotProduct(std::vector<int> &v1, std::vector<int> &v2);
 
-    float calcVectorLength(std::vector<int> &v1);
+        float calcVectorLength(std::vector<int> &v1);
 
-    float calcCosAngle(float dot, float v0Length, float v1Length);
+        float calcCosAngle(float dot, float v0Length, float v1Length);
 
-    bool isSquareMarker(std::vector<int> &u, std::vector<int> &v, std::vector<int> &uu, std::vector<int> &vv);
+        bool isSquareMarker(std::vector<int> &u, std::vector<int> &v, std::vector<int> &uu, std::vector<int> &vv);
 
-    bool getRobotID(std::vector<bool> &resultData, std::vector<int> &orientation, int &id);
+        bool getRobotID(std::vector<bool> &resultData, std::vector<int> &orientation, int &id);
 
-    bool getCenter(float &xCenter, float &yCenter, std::vector<int> corners);
+        bool getCenter(float &xCenter, float &yCenter, std::vector<int> corners);
 
-    void getAngle(float &angle, std::vector<int> &orientation, std::vector<int> &corners);
+        void getAngle(float &angle, std::vector<int> &orientation, std::vector<int> &corners);
 
-    void findWhiteBlob(int i, int j, std::vector<int> &x, std::vector<int> &y, std::vector<int> &index, Mat image);
+        float checkNeighbourPixels(int xPixel, int yPixel, Mat image, Vec3b &color);
 
-    void groupWhitePixels(int i, int j, std::vector<int> &x, std::vector<int> &y, Vec3b lowerBound, Vec3b upperBound,
-                          Mat whitePixels, Vec3b setColor);
+        void findWhiteBlob(int i, int j, std::vector<int> &x, std::vector<int> &y, std::vector<int> &index, Mat image);
 
-    bool findMarkerData(std::vector<bool> &markerData, std::vector<int> &u, std::vector<int> &v,
-    std::vector<int> &uu, std::vector<int> &vv, std::vector<int> &corners, Mat image);
+        void groupWhitePixels(int i, int j, std::vector<int> &x, std::vector<int> &y, Vec3b lowerBound, Vec3b upperBound,
+                Mat whitePixels, Vec3b setColor);
 
-    bool checkIfSquareBlob(std::vector<int> &x, std::vector<int> &y, int startIndex, int endIndex, Mat image,
-            std::vector<int> &corners, std::vector<int> &u, std::vector<int> &v, std::vector<int> &uu, std::vector<int> &vv);
+        float findMarkerData(std::vector<bool> &markerData, std::vector<int> &u, std::vector<int> &v,
+                std::vector<int> &uu, std::vector<int> &vv, std::vector<int> &corners, Mat image);
 
-    bool findRobotData(std::vector<bool> &resultData, std::vector<float> &posRotId, std::vector<int> &corners);
+        bool checkIfSquareBlob(std::vector<int> &x, std::vector<int> &y, int startIndex, int endIndex, Mat image,
+                std::vector<int> &corners, std::vector<int> &u, std::vector<int> &v, std::vector<int> &uu, std::vector<int> &vv);
+
+        bool findRobotData(std::vector<bool> &resultData, std::vector<float> &posRotId, std::vector<int> &corners);
 
 };
 

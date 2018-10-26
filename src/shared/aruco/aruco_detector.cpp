@@ -38,23 +38,25 @@ std::vector<PosRotId> ArucoDetector::performTrackingOnImage(cv::Mat image) {
         std::vector<int> markerX;
         std::vector<int> markerY;
         std::vector<float> markerTheta;
+        std::vector<float> confidence;
 
         finder.setG_LowerWhiteMargin(lower_white_margin);
         finder.setG_upperWhiteMargin(upper_white_margin);
         finder.setG_deltaWhiteMargin(delta_margin);
-        finder.findMarkers(image, markerIds, markerX, markerY, markerTheta);
+        finder.findMarkers(image, markerIds, markerX, markerY, markerTheta, confidence);
 
         dict_mutex.unlock();
 
         if (!markerIds.empty()) {
 #ifdef DEBUG
-            printf("%-12s%-12s%-12s%-12s\n", "ID", "x (pixels)", "y (pixels)", "angle (pi rad)");
+            printf("%-15s%-15s%-15s%-15s%-15s\n", "ID", "x (pixels)", "y (pixels)", "angle (pi rad)","confidence (0.0 - 1.0)");
 #endif
             for (int i = 0; i < (int)markerIds.size(); i++) {
                 int id = markerIds[i];
                 int x = markerX[i];
                 int y = markerY[i];
                 float angle = markerTheta[i];
+                float conf = confidence[i];
 
                 PosRotId posRot = PosRotId(id, x, y, angle);
                 result.insert(result.end(), posRot);
@@ -64,13 +66,15 @@ std::vector<PosRotId> ArucoDetector::performTrackingOnImage(cv::Mat image) {
                     std::string strX = std::to_string( x );
                     std::string strY = std::to_string( y );
                     std::string strT = std::to_string( (angle) );
+                    std::string strC = std::to_string( (conf) );
 
                     char const *idid = strID.c_str();
                     char const *xx = strX.c_str();
                     char const *yy = strY.c_str();
                     char const *theta = strT.c_str();
+                    char const *confconf = strC.c_str();
 
-                    printf("%-12s%-12s%-12s%-12s\n", idid, xx, yy, theta);
+                    printf("%-15s%-15s%-15s%-15s%-15s\n", idid, xx, yy, theta, confconf);
 #endif
             }
         }

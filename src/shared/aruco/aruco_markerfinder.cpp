@@ -33,7 +33,7 @@ bool ArucoMarkerfinder::isColor(Vec3b color, Vec3b lowerBound, Vec3b upperBound)
 
 /// Finds the furthest pixel from vector 'relativeToPixel', looking in the selected indexes in vectors x & y
 int ArucoMarkerfinder::findFurthestPixel(int xRelative, int yRelative, int startIndex, int endIndex,
-                                         std::vector<int> &x, std::vector<int> &y) {
+        std::vector<int> &x, std::vector<int> &y) {
 
     int xDst;
     int yDst;
@@ -58,8 +58,8 @@ int ArucoMarkerfinder::findFurthestPixel(int xRelative, int yRelative, int start
 
 /// Finds the opposite corner of a (presumably) square blob of pixels
 void ArucoMarkerfinder::findOppositeCorner(int xRelative, int yRelative, int startIndex, int endIndex,
-                                           std::vector<int> &x, std::vector<int> &y, Vec3b &lowerBound, Vec3b &upperBound, std::vector<int> &corners,
-                                           Mat image, Vec3b &setColor) {
+        std::vector<int> &x, std::vector<int> &y, Vec3b &lowerBound, Vec3b &upperBound, std::vector<int> &corners,
+        Mat image, Vec3b &setColor) {
 
     // using delta white margin, first find the opposite corner of a square
     // using that furthest corner, try to find more potential pixels as corner, finding pixels using a wider 'white' range
@@ -74,7 +74,7 @@ void ArucoMarkerfinder::findOppositeCorner(int xRelative, int yRelative, int sta
     // find a few new pixels with a wider color-margin in the corner
     std::vector<int> xCandidatePixels = {x[furthestIndex]}, yCandidatePixels = {y[furthestIndex]};
     groupWhitePixels(x[furthestIndex], y[furthestIndex], xCandidatePixels, yCandidatePixels, lowerBound, upperBound,
-                     std::move(image), setColor);
+            std::move(image), setColor);
 
     // find the furthest corner again using these new pixels
     auto candidateMaxIndex = (int) (xCandidatePixels.size() - 1);
@@ -87,8 +87,8 @@ void ArucoMarkerfinder::findOppositeCorner(int xRelative, int yRelative, int sta
 
 /// Creates four vectors of the sides of a square
 void ArucoMarkerfinder::createVectors(std::vector<int> &x, std::vector<int> &y, std::vector<int> &index,
-                                      std::vector<int> &v0, std::vector<int> &v1, std::vector<int> &v2,
-                                      std::vector<int> &v3) {
+        std::vector<int> &v0, std::vector<int> &v1, std::vector<int> &v2,
+        std::vector<int> &v3) {
 
     v0 = {index[0] - index[4], index[1] - index[5]};
     v1 = {index[0] - index[6], index[1] - index[7]};
@@ -112,7 +112,7 @@ float ArucoMarkerfinder::calcCosAngle(float dot, float v0Length, float v1Length)
 }
 
 bool ArucoMarkerfinder::isSquareMarker(std::vector<int> &u, std::vector<int> &v, std::vector<int> &uu,
-                                       std::vector<int> &vv) {
+        std::vector<int> &vv) {
     // dot products between vectors
     int uvDot = calcDotProduct(u, v);
     int uuvDot = calcDotProduct(uu, v);
@@ -133,7 +133,7 @@ bool ArucoMarkerfinder::isSquareMarker(std::vector<int> &u, std::vector<int> &v,
 
     // test for approximately equal angles
     bool isSquareAngled = ((abs(uvCosTheta) < g_maxAngleDeviation) | (abs(uuvCosTheta) < g_maxAngleDeviation) |
-                           (abs(uvvCosTheta) < g_maxAngleDeviation) | (abs(uuvvCosTheta) < g_maxAngleDeviation));
+            (abs(uvvCosTheta) < g_maxAngleDeviation) | (abs(uuvvCosTheta) < g_maxAngleDeviation));
     if (! isSquareAngled) {
 #ifdef DEBUG
         std::cerr << "marker dismissed: the angles are too far off 90 degrees" << std::endl;
@@ -142,8 +142,8 @@ bool ArucoMarkerfinder::isSquareMarker(std::vector<int> &u, std::vector<int> &v,
     }
     // test for approximately equal sidelengths
     bool hasEqualSidelength = ((abs(uLength - vLength)/uLength < g_maxLengthDeviation) |
-                               (abs(uLength - uuLength)/uLength < g_maxLengthDeviation) |
-                               (abs(uLength - vvLength)/uLength < g_maxLengthDeviation));
+            (abs(uLength - uuLength)/uLength < g_maxLengthDeviation) |
+            (abs(uLength - vvLength)/uLength < g_maxLengthDeviation));
     if (! hasEqualSidelength) {
 #ifdef DEBUG
         std::cerr << "marker dismissed: the marker does not have equal sidelengths)" << std::endl;
@@ -275,7 +275,7 @@ bool ArucoMarkerfinder::getCenter(float &xCenter, float &yCenter, std::vector<in
     }
     // calculate s and fill it in in the formulas for xCenter and Ycenter, explanation above
     float s = ( ((aY - cY)*(bX - aX) + (cX - aX)*(bY - aY)) /
-                ((dY - cY)*(bX - aX) + (cX - dX)*(bY - aY)) );
+            ((dY - cY)*(bX - aX) + (cX - dX)*(bY - aY)) );
     xCenter = cX + s*(dX - cX);
     yCenter = cY + s*(dY - cY);
 
@@ -307,9 +307,28 @@ void ArucoMarkerfinder::getAngle(float &angle, std::vector<int> &orientation, st
     angle = - angle + CV_PI;
 }
 
+float ArucoMarkerfinder::checkNeighbourPixels(int xPixel, int yPixel, Mat image, Vec3b &green) {
+    float confidence = 0.0;
+    int totalChecks = 0;
+    for (int i = -1; i < 2; i++) {          // for all neighbouring pixels
+        for (int j = -1; j < 2; j++) {
+            totalChecks ++;
+
+            auto &color = image.at<Vec3b>((int) round(xPixel+i), (int) round(yPixel+j));
+            if (color == green) {
+                confidence ++;
+            }
+        }
+    }
+    confidence *= (float)1.0/totalChecks;
+
+
+    return confidence;
+}
+
 /// Checks if a pixel is white. if it is, find pixels around it and make a blob of white
 void ArucoMarkerfinder::findWhiteBlob(int i, int j, std::vector<int> &x, std::vector<int> &y,
-                                      std::vector<int> &index, Mat image) {
+        std::vector<int> &index, Mat image) {
 
     auto &color = image.at<Vec3b>(i, j);
     Vec3b lowerBound = g_lowerWhiteMargin, upperBound = g_upperWhiteMargin;
@@ -324,7 +343,7 @@ void ArucoMarkerfinder::findWhiteBlob(int i, int j, std::vector<int> &x, std::ve
 /// Recursively groups white pixels
 /// Breath first search
 void ArucoMarkerfinder::groupWhitePixels(int i, int j, std::vector<int> &x, std::vector<int> &y,
-                                         Vec3b lowerBound, Vec3b upperBound, Mat image, Vec3b setColor) {
+        Vec3b lowerBound, Vec3b upperBound, Mat image, Vec3b setColor) {
 
     std::queue<int> xQueue, yQueue;
     xQueue.push(i);
@@ -357,8 +376,8 @@ void ArucoMarkerfinder::groupWhitePixels(int i, int j, std::vector<int> &x, std:
 
 /// For each group of pixels, check if it actually is an aruco marker
 bool ArucoMarkerfinder::checkIfSquareBlob(std::vector<int> &x, std::vector<int> &y, int startIndex, int endIndex,
-                                          Mat image, std::vector<int> &corners,
-                                          std::vector<int> &u, std::vector<int> &v, std::vector<int> &uu, std::vector<int> &vv) {
+        Mat image, std::vector<int> &corners,
+        std::vector<int> &u, std::vector<int> &v, std::vector<int> &uu, std::vector<int> &vv) {
 
     if (endIndex - startIndex < g_minMarkerPixels) {
 #ifdef DEBUG
@@ -375,11 +394,11 @@ bool ArucoMarkerfinder::checkIfSquareBlob(std::vector<int> &x, std::vector<int> 
 
     // find the pixel furthest away from the starting index and push the index back into corners
     findOppositeCorner(x[startIndex], y[startIndex], startIndex, endIndex, x, y, lowerBound, upperBound,
-                       corners, image, setColor);
+            corners, image, setColor);
 
     // find the pixel furthest away from the pixel found above and push the index back into corners
     findOppositeCorner(corners[0], corners[1], startIndex, endIndex, x, y, lowerBound, upperBound,
-                       corners, image, setColor);
+            corners, image, setColor);
 
     // find the center pixel of the first two corners
     float xabDst = corners[0] - corners[2];
@@ -389,11 +408,11 @@ bool ArucoMarkerfinder::checkIfSquareBlob(std::vector<int> &x, std::vector<int> 
 
     // find the third corner
     findOppositeCorner((int) (xCenter - yabDst), (int) (yCenter + xabDst), startIndex, endIndex, x, y,
-                       lowerBound, upperBound, corners, image, setColor);
+            lowerBound, upperBound, corners, image, setColor);
 
     // find the last corner, which is the furthest pixel from the corner found above
     findOppositeCorner(corners[4], corners[5], startIndex, endIndex, x, y, lowerBound, upperBound,
-                       corners, image, setColor);
+            corners, image, setColor);
 
     // save the corner data to corners
     for (int i = 0; i < 4; i ++) {
@@ -409,25 +428,26 @@ bool ArucoMarkerfinder::checkIfSquareBlob(std::vector<int> &x, std::vector<int> 
 }
 
 /// Using the four vectors describing the corners of a square, extract the bit-data of the (potential) marker
-bool ArucoMarkerfinder::findMarkerData(std::vector<bool> &markerData, std::vector<int> &u, std::vector<int> &v,
-                                       std::vector<int> &uu, std::vector<int> &vv, std::vector<int> &corners, Mat image) {
+float ArucoMarkerfinder::findMarkerData(std::vector<bool> &markerData, std::vector<int> &u, std::vector<int> &v,
+        std::vector<int> &uu, std::vector<int> &vv, std::vector<int> &corners, Mat image) {
 
     // extract marker bit data
     double xPixel;
     double yPixel;
+    float totalConfidence = 1;
     Vec3b green = {0, 255, 0}; //call Thijs at: 0629273740 for moral and emotional support
     int edgeCheck = 0;
     for (int i = - 1; i < ARUCOSIZE + 1; i ++) {
         for (int j = - 1; j < ARUCOSIZE + 1; j ++) {
             // calculate the position of all the marker data bits using a transformation from vectors to xy-plane of the image-pixels
             xPixel = corners[0] - ((j + 1.5)*((ARUCOSIZE - i + 0.5)*u[0] + (i + 1.5)*uu[0]) +
-                                   (i + 1.5)*((ARUCOSIZE - j + 0.5)*v[0] + (j + 1.5)*vv[0]))/
-                                  ((ARUCOSIZE + 2)*(ARUCOSIZE + 2));
+                    (i + 1.5)*((ARUCOSIZE - j + 0.5)*v[0] + (j + 1.5)*vv[0]))/
+                    ((ARUCOSIZE + 2)*(ARUCOSIZE + 2));
             yPixel = corners[1] - ((j + 1.5)*((ARUCOSIZE - i + 0.5)*u[1] + (i + 1.5)*uu[1]) +
-                                   (i + 1.5)*((ARUCOSIZE - j + 0.5)*v[1] + (j + 1.5)*vv[1]))/
-                                  ((ARUCOSIZE + 2)*(ARUCOSIZE + 2));
-            if ( xPixel < g_pixFromEdge || xPixel > image.rows-g_pixFromEdge ||
-                 yPixel < g_pixFromEdge || yPixel > image.cols-g_pixFromEdge ) {
+                    (i + 1.5)*((ARUCOSIZE - j + 0.5)*v[1] + (j + 1.5)*vv[1]))/
+                    ((ARUCOSIZE + 2)*(ARUCOSIZE + 2));
+            if (xPixel < g_pixFromEdge || xPixel > image.rows - g_pixFromEdge ||
+                    yPixel < g_pixFromEdge || yPixel > image.cols - g_pixFromEdge) {
 #ifdef DEBUG
                 std::cerr << "marker dismissed: bitdata of the marker is outside the image frame" << std::endl;
 #endif
@@ -450,24 +470,28 @@ bool ArucoMarkerfinder::findMarkerData(std::vector<bool> &markerData, std::vecto
                     }
                 }
             }
-            else if (color == green) {
-                // in the center data structure, save the data of the bits
-                image.at<Vec3b>((int) round(xPixel), (int) round(yPixel)) = {75, 0, 0};
-                markerData.push_back(false);
-            }
             else {
-                image.at<Vec3b>((int) round(xPixel), (int) round(yPixel)) = {225, 0, 0};
-                markerData.push_back(true);
+                float confidence = checkNeighbourPixels((int) round(xPixel), (int) round(yPixel), image, green);
+                if (confidence > 0.5) {
+                    image.at<Vec3b>((int) round(xPixel), (int) round(yPixel)) = {75, 0, 0};
+                    markerData.push_back(false);
+                    totalConfidence *= confidence;
+                }
+                else {
+                    image.at<Vec3b>((int) round(xPixel), (int) round(yPixel)) = {225, 0, 0};
+                    markerData.push_back(true);
+                    totalConfidence *= (1.0 - confidence);
+                }
             }
+
         }
     }
-
-    return true;
+    return totalConfidence;
 }
 
 /// Finds robot id, position and angle of the (potential) marker using the four corners of the marker
 bool ArucoMarkerfinder::findRobotData(std::vector<bool> &resultData, std::vector<float> &posRotID,
-                                      std::vector<int> &corners) {
+        std::vector<int> &corners) {
 
     std::vector<int> orientation;
 
@@ -495,7 +519,7 @@ bool ArucoMarkerfinder::findRobotData(std::vector<bool> &resultData, std::vector
 
 /// Finds the robot id, x,y position and rotations of all robots
 void ArucoMarkerfinder::findMarkers(Mat image, std::vector<int> &markerID, std::vector<int> &markerX,
-                                    std::vector<int> &markerY, std::vector<float> &markerTheta) {
+        std::vector<int> &markerY, std::vector<float> &markerTheta, std::vector<float> &confidence) {
 
     // create vector of all x- and y-positions of the white pixels
     std::vector<int> xSqMarker, ySqMarker;
@@ -520,16 +544,25 @@ void ArucoMarkerfinder::findMarkers(Mat image, std::vector<int> &markerID, std::
         int startInd = startIndSqMarker[marker];
         int endInd = startIndSqMarker[marker + 1];
 
-        bool isSquare, edgeIsWhite, isRobotID;
+        bool isSquare, isRobotID;
+        float markerDataConfidence;
+        float minimumConfidence = 0.5;
         std::vector<int> corners;
         std::vector<int> u, v, uu, vv;
         std::vector<bool> markerData;
         std::vector<float> posRotID;
-        isSquare = checkIfSquareBlob(xSqMarker, ySqMarker, startInd, endInd, image, corners, u, v, uu, vv);
 
+        isSquare = checkIfSquareBlob(xSqMarker, ySqMarker, startInd, endInd, image, corners, u, v, uu, vv);
         if (! isSquare) continue;
-        edgeIsWhite = findMarkerData(markerData, u, v, uu, vv, corners, image);
-        if (! edgeIsWhite) continue;
+
+        markerDataConfidence = findMarkerData(markerData, u, v, uu, vv, corners, image);
+        if (markerDataConfidence < minimumConfidence) {
+#ifdef DEBUG
+            std::cerr << "marker dismissed: marker has not enough confidence" << std::endl;
+#endif
+            continue;
+        }
+
         isRobotID = findRobotData(markerData, posRotID, corners);
         if (! isRobotID) continue;
 
@@ -542,6 +575,7 @@ void ArucoMarkerfinder::findMarkers(Mat image, std::vector<int> &markerID, std::
         markerX.push_back(y);
         markerY.push_back(x);
         markerTheta.push_back(theta);
+        confidence.push_back(markerDataConfidence);
 
         posRotID.clear();
         corners.clear();
