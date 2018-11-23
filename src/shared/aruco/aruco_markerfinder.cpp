@@ -73,6 +73,7 @@ void ArucoMarkerfinder::findOppositeCorner(int xRelative, int yRelative, int sta
     }
     // find a few new pixels with a wider color-margin in the corner
     std::vector<int> xCandidatePixels = {x[furthestIndex]}, yCandidatePixels = {y[furthestIndex]};
+
     groupWhitePixels(x[furthestIndex], y[furthestIndex], xCandidatePixels, yCandidatePixels, lowerBound, upperBound,
             std::move(image), setColor);
 
@@ -103,7 +104,7 @@ int ArucoMarkerfinder::calcDotProduct(std::vector<int> &v1, std::vector<int> &v2
 
 /// Calculate the length of a vector
 float ArucoMarkerfinder::calcVectorLength(std::vector<int> &v1) {
-    return (float)sqrt(v1[0] * v1[0] + v1[1] * v1[1]);
+    return (float) sqrt(v1[0]*v1[0] + v1[1]*v1[1]);
 }
 
 /// Calculate the cosine of the angle between two vectors
@@ -266,7 +267,7 @@ bool ArucoMarkerfinder::getCenter(float &xCenter, float &yCenter, std::vector<in
     auto aX = (float) corners[0], bX = (float) corners[2], cX = (float) corners[4], dX = (float) corners[6];
     auto aY = (float) corners[1], bY = (float) corners[3], cY = (float) corners[5], dY = (float) corners[7];
 
-    if ( (dY - cY)*(bX - aX) + (cX - dX)*(bY - aY) == 0 ) {
+    if ((dY - cY)*(bX - aX) + (cX - dX)*(bY - aY) == 0) {
 #ifdef DEBUG
         std::cerr << "marker dismissed, divide by zero??: " << (dY - cY)*(bX - aX) + (cX - dX)*(bY - aY)
                   << std::endl;
@@ -274,8 +275,8 @@ bool ArucoMarkerfinder::getCenter(float &xCenter, float &yCenter, std::vector<in
         return false;
     }
     // calculate s and fill it in in the formulas for xCenter and Ycenter, explanation above
-    float s = ( ((aY - cY)*(bX - aX) + (cX - aX)*(bY - aY)) /
-            ((dY - cY)*(bX - aX) + (cX - dX)*(bY - aY)) );
+    float s = (((aY - cY)*(bX - aX) + (cX - aX)*(bY - aY))/
+            ((dY - cY)*(bX - aX) + (cX - dX)*(bY - aY)));
     xCenter = cX + s*(dX - cX);
     yCenter = cY + s*(dY - cY);
 
@@ -310,18 +311,17 @@ void ArucoMarkerfinder::getAngle(float &angle, std::vector<int> &orientation, st
 float ArucoMarkerfinder::checkNeighbourPixels(int xPixel, int yPixel, Mat image, Vec3b &green) {
     float confidence = 0.0;
     int totalChecks = 0;
-    for (int i = -1; i < 2; i++) {          // for all neighbouring pixels
-        for (int j = -1; j < 2; j++) {
+    for (int i = - 1; i < 2; i ++) {          // for all neighbouring pixels
+        for (int j = - 1; j < 2; j ++) {
             totalChecks ++;
 
-            auto &color = image.at<Vec3b>((int) round(xPixel+i), (int) round(yPixel+j));
+            auto &color = image.at<Vec3b>((int) round(xPixel + i), (int) round(yPixel + j));
             if (color == green) {
                 confidence ++;
             }
         }
     }
-    confidence *= (float)1.0/totalChecks;
-
+    confidence *= (float) 1.0/totalChecks;
 
     return confidence;
 }
@@ -354,7 +354,8 @@ void ArucoMarkerfinder::groupWhitePixels(int i, int j, std::vector<int> &x, std:
         j = yQueue.front();
         x.push_back(i);
         y.push_back(j);
-        if ((i > g_pixFromEdge) && (j > g_pixFromEdge) && (i < image.rows-g_pixFromEdge) && (j < image.cols-g_pixFromEdge)) {
+        if ((i > g_pixFromEdge) && (j > g_pixFromEdge) && (i < image.rows - g_pixFromEdge)
+                && (j < image.cols - g_pixFromEdge)) {
 
             int ii = 0;
             for (int jj : {1, 0, - 1, 0}) {          // check 'up left down right'
