@@ -1,5 +1,5 @@
 //
-// Created by wouter on 3/26/18.
+// Created by Wouter Timmermans on 3/26/18.
 //
 
 
@@ -26,9 +26,8 @@ void RunFilter::filter(std::vector<PosRotId> &input) {
         }
         history.erase(history.begin());
     }
-    for (auto it = input.begin(); it != input.end(); it++) {
+    for (auto &bot : input) {
     //for ( PosRotId bot : input) {
-        PosRotId& bot = *it;
         counters[bot.getID()]++;
         int count = counters[bot.getID()];
         if (count > threshold) {
@@ -37,16 +36,12 @@ void RunFilter::filter(std::vector<PosRotId> &input) {
         bot.isValid();
 
     }
-    return;
 }
 
 
 plugin_detect_aruco::plugin_detect_aruco(FrameBuffer * _buffer, const CameraParameters& camera_params, const RoboCupField& field)
         : VisionPlugin(_buffer), camera_parameters(camera_params), field(field)
 {
-
-
-
 
     _settings = new plugin_detect_aruco_settings();
     _notifier.addRecursive(_settings->getSettings());
@@ -55,9 +50,8 @@ plugin_detect_aruco::plugin_detect_aruco(FrameBuffer * _buffer, const CameraPara
     _marker_bits = _settings->marker_bits->getInt();
     _total_markers = _settings->total_markers->getInt();
     _markers_per_team = _settings->markers_per_team->getInt();
-    detector = new ArucoDetector(_total_markers, _marker_bits);
+    detector = new ArucoDetector();
     filter = new RunFilter(30,25);
-
 
 }
 
@@ -71,15 +65,21 @@ VarList *plugin_detect_aruco::getSettings() {
 
 ProcessResult plugin_detect_aruco::process(FrameData *data, RenderOptions *options) {
     (void)options;
-    if (data==0) return ProcessingFailed;
+    if (data==nullptr) return ProcessingFailed;
 
     if (_notifier.hasChanged()) {
         _enabled = _settings->isEnabled->getBool();
         _marker_bits = _settings->marker_bits->getInt();
         _total_markers = _settings->total_markers->getInt();
         _markers_per_team = _settings->markers_per_team->getInt();
-        //detector->setDictionaryProperties(_total_markers, _marker_bits);
+        _lower_blue_margin = (unsigned char)_settings->lower_blue_margin->getInt();
+        _lower_green_margin = (unsigned char)_settings->lower_green_margin->getInt();
+        _lower_red_margin = (unsigned char)_settings->lower_red_margin->getInt();
+        _delta_margin = (unsigned char)_settings->delta_margin->getInt();
 
+        detector->setLowerWhiteMargin(_lower_blue_margin, _lower_green_margin, _lower_red_margin);
+        detector->setDeltaMargin(_delta_margin);
+        detector->setUpperWhiteMargin();
     }
     if (!_enabled) {
         return ProcessingOk;
@@ -99,15 +99,7 @@ ProcessResult plugin_detect_aruco::process(FrameData *data, RenderOptions *optio
             CV_8UC3,
             data->video.getData());
 
-    //cv::cvtColor(img,img,cv::COLOR_RGB2GRAY);
-    //cv::LUT(img,*graylut,img);
-    //cv::GaussianBlur(img, img, cv::Size(), 3);
-
-    //cv::fastNlMeansDenoising(img, img);
-    //cv::threshold(img,img,127,255,cv::THRESH_TOZERO);
-
-    //data->map.insert("aruco_frame",new cv::Mat(img));
-    vector<PosRotId> results = detector->performTrackingOnImage(img, true);
+    vector<PosRotId> results = detector->performTrackingOnImage(img);
     filter->filter(results);
     detection_frame->clear_robots_blue();
     detection_frame->clear_robots_yellow();
@@ -121,34 +113,27 @@ ProcessResult plugin_detect_aruco::process(FrameData *data, RenderOptions *optio
         vector3d reg_center3d;
         camera_parameters.image2field(reg_center3d,reg_img_center,140.0);
         vector2d reg_center(reg_center3d.x,reg_center3d.y);
-        SSL_DetectionRobot*  robot = 0;
+        SSL_DetectionRobot*  robot = nullptr;
         if(pri.getID() >= _markers_per_team) {
-            robot = robots_blue->Add();
+            robot = robots_yellow->Add();
             robot->set_robot_id((unsigned int)(pri.getID()-_markers_per_team));
         } else {
-            robot = robots_yellow->Add();
+            robot = robots_blue->Add();
             robot->set_robot_id((unsigned int)pri.getID());
         }
         robot->set_x((float)reg_center.x);
         robot->set_y((float)reg_center.y);
         robot->set_confidence(1);
-        std::cerr << "orientation before compensation: " << pri.getTheta() << std::endl;
-
 
         robot->set_orientation((float)-(pri.getTheta() - .5*CV_PI));
-        if (robot->orientation() > (float)CV_PI) robot->set_orientation((robot->orientation()-(2*CV_PI)));
+        if (robot->orientation() > (float)CV_PI) robot->set_orientation((float)(robot->orientation()-(2*CV_PI)));
 
 
         robot->set_height(0);
         robot->set_pixel_x((float)pri.getX());
         robot->set_pixel_y((float)pri.getY());
-#ifdef DEBUG
-        std::cerr << "Detected robot " << robot->robot_id() << " at (" << robot->x() << ", " << robot->y() << ", " << robot->orientation() << ");" << endl;
-#endif
+
     }
-#ifdef DEBUG
-    std::cerr << endl << "-----------------------" << endl;
-#endif
     return ProcessingOk;
 
 

@@ -8,10 +8,10 @@
 #include <vector>
 #include <string>
 #include "opencv2/opencv.hpp"
-#include "opencv2/aruco.hpp"
 #include <cmath>
 #include <mutex>
 #include "pos_rot_id.h"
+#include "aruco_markerfinder.h"
 #include <unistd.h>
 
 class ArucoDetector {
@@ -25,7 +25,7 @@ public:
     /// \param originID id of marker that serves as origin.
     /// \param limitID id of marker that serves as limit.
     /// \param camId the OpenCV camera id to use for the tracking
-    explicit ArucoDetector(int total_markers, int bits);
+    explicit ArucoDetector();
 
 
     /// Performs the tracking and return the PosRots in a vector. Performs the tracking for one frame of the input device.
@@ -33,20 +33,22 @@ public:
     /// \returns A vector containing PosRotIds for each marker that has been observed in this frame.
     //std::vector<PosRotId> performTracking(bool showDebug);
 
-
-    std::vector<PosRotId> performTrackingOnImage(cv::Mat image, bool showDebug);
-    void setDictionaryProperties(int total_markers, int bits);
+    std::vector<PosRotId> performTrackingOnImage(cv::Mat image);
+    void setLowerWhiteMargin(const unsigned char &blue, const unsigned char &green, const unsigned char &red);
+    void setDeltaMargin(const unsigned char &delta_margin);
+    void setUpperWhiteMargin();
 private:
-    std::mutex dict_mutex;
 
-    /// Transforms the observed marker position camera coordinate to a coordinate relative to origin and limit.
-    /// returns [0,0] if the position is outside the area defined by the origin and limit marker.
-    /// \param origin the position of the lower left corner of the origin marker.
-    /// \param limit the position of the lower left corner of the limit marker.
-    /// \param observedPos the observed positions of the corners of a marker in camera coordinates.
-    /// \return the position relative to origin and limit of the observed marker.
-    cv::Point2f
-    calculatePosition(std::vector<cv::Point2f> observedPos);
+    std::mutex dict_mutex;
+    Vec3b upper_white_margin = {255,255,255};
+    Vec3b lower_white_margin;
+    Vec3b delta_margin;
+
+
+
+    ArucoMarkerfinder finder;
+
+
 
     /// Fills cameraMatrix and distCoeffs with values. These values should come from the camera calibration performed
     /// with charuco boards.
@@ -55,23 +57,12 @@ private:
     void readCameraParameters(cv::Ptr<cv::Mat> cameraMatrix, cv::Ptr<cv::Mat> distCoeffs);
 
 
-	///returns the euclidean distance between two Point2f
-	double euclideanDist(cv::Point2f a, cv::Point2f b);	
-	
-	///returns the average resolution between each edge of the marker, by giving the vector that contains the corners of the marker
-	double getAvgRes(std::vector<cv::Point2f> corners);
-
     double totalTime;
     int totalIterations;
 
-//    cv::Point2f origin;
-//    cv::Point2f limit;
-//    cv::Mat originRot;
-//    cv::Mat limitRot;
 
     cv::Mat cameraMatrix, distCoeffs;
-    cv::Ptr<cv::aruco::Dictionary> dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50);
-    cv::Ptr<cv::aruco::DetectorParameters> detectorParams = cv::aruco::DetectorParameters::create();
+
 };
 
 

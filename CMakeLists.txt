@@ -103,7 +103,7 @@ endif()
 
 find_package( OpenCV 2 QUIET )
 #set (OpenCV_DIR /usr/share/opencv)
-find_package( OpenCV 3 REQUIRED aruco HINTS /usr/local/share/OpenCV )
+find_package( OpenCV 3 REQUIRED HINTS /usr/local/share/OpenCV )
 if(OpenCV_FOUND)
   include_directories(${OpenCV_INCLUDE_DIRS})
   add_definitions(-D OPENCV)
@@ -115,7 +115,7 @@ else()
   message(WARNING "No correct OpenCV found")
 endif()
 
-if(OpenCV_aruco_FOUND)
+if(OPENCV_FOUND)
 	add_definitions(-D CMAKE_BUILD_TYPE=DEBUG)
     add_definitions(-D ARUCO)
 	set(SHARED_SRCS ${SHARED_SRCS} ${shared_dir}/aruco/aruco_detector.cpp ${shared_dir}/aruco/pos_rot_id.cpp src/app/plugins/plugin_detect_aruco.cpp )
@@ -127,15 +127,14 @@ endif()
 
 find_package( Pylon5 QUIET )
 if(PYLON5_FOUND)
-	include_directories(SYSTEM ${PYLON5_INCLUDE_DIRS})
-	add_definitions(-D PYLON5)
-	message(STATUS "Pylon5 found")
-	set (SHARED_SRCS ${SHARED_SRCS} ${shared_dir}/capture/capture_basler.cpp)
-	set (SHARED_HEADERS ${SHARED_HEADERS} ${shared_dir}/capture/capture_basler.h)
+  include_directories(SYSTEM ${PYLON5_INCLUDE_DIRS})
+  add_definitions(-D PYLON5)
+  message(STATUS "Pylon5 found")
+  set (SHARED_SRCS ${SHARED_SRCS} ${shared_dir}/capture/capture_basler.cpp src/shared/aruco/aruco_markerfinder.cpp src/shared/aruco/aruco_markerfinder.h)
+  set (SHARED_HEADERS ${SHARED_HEADERS} ${shared_dir}/capture/capture_basler.h)
 else()
 	message(STATUS "Pylon5 not found")
 endif()
-
 include_directories(${PROJECT_SOURCE_DIR}/src/app)
 include_directories(${PROJECT_SOURCE_DIR}/src/app/gui)
 include_directories(${PROJECT_SOURCE_DIR}/src/app/plugins)
@@ -178,7 +177,7 @@ set (SRCS
 	src/app/stacks/visionstack.cpp
 
 	${OPTIONAL_SRCS}
-)
+        )
 
 qt4_wrap_cpp (MOC_SRCS
 	src/app/capture_thread.h
@@ -191,7 +190,7 @@ qt4_wrap_cpp (MOC_SRCS
 	src/app/gui/videowidget.h
 	src/app/gui/jog_dial.h
 	src/shared/util/lut3d.h
-
+	
 	src/app/plugins/plugin_dvr.h
 	src/app/plugins/plugin_publishgeometry.h
 	src/app/plugins/plugin_legacypublishgeometry.h
@@ -253,13 +252,14 @@ endif()
 # make sure to use C++98 and enable warnings
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ansi")
 # enable warnings
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g")
 
 #flags to set in debug mode
-set (CMAKE_CXX_FLAGS_DEBUG "-g -Wl,--no-as-needed")
+set (CMAKE_CXX_FLAGS_DEBUG "-g -O2 -Wl,--no-as-needed")
 
 #flags to set in release mode
-set (CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3 -march=native -Wl,--no-as-needed")
+#set (CMAKE_CXX_FLAGS_RELEASE "-g -00 -march=native -Wl,--no-as-needed")
+set (CMAKE_CXX_FLAGS_RELEASE "-g -O2 -march=native -Wl,--no-as-needed")
 
 message( STATUS "CC Flags: ${CMAKE_CXX_FLAGS_RELEASE}")
 message (STATUS "Custom CC Flags: ${cc_flags}")
