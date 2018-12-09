@@ -40,8 +40,8 @@ int PluginNeuralColorCalib::TrainNeuralopenCV() {
     CvMat trainout;
     int interactions_ran=0;
 
-    term_crit.max_iter =10000; //maximum number of epochs to train
-    term_crit.epsilon  = 1e-7; //maximum tolerance to errors of the network during training
+    term_crit.max_iter =1000; //maximum number of epochs to train
+    term_crit.epsilon  = 1e-5; //maximum tolerance to errors of the network during training
     term_crit.type = CV_TERMCRIT_ITER + CV_TERMCRIT_EPS; //indicates training stops either when performance or max. epochs is reached
     netparams=CvANN_MLP_TrainParams(term_crit, CvANN_MLP_TrainParams::BACKPROP,0.1,0.1); //specifies learning algorithm, learning rate and momentum
 
@@ -259,9 +259,7 @@ void PluginNeuralColorCalib::mousePressEvent ( QMouseEvent * event, pixelloc loc
 }
 
 void PluginNeuralColorCalib::mouseReleaseEvent ( QMouseEvent * event, pixelloc loc ) {
-    event->accept();
-    //continuing_undo = false;
-    //mouseEvent(event,loc);
+    mouseEvent(event,loc);
 }
 
 void PluginNeuralColorCalib::mouseMoveEvent ( QMouseEvent * event, pixelloc loc ) {

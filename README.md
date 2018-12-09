@@ -21,6 +21,10 @@
 ========================================================================
 ```
 
+----
+[![Build Status](https://travis-ci.org/RoboCup-SSL/ssl-vision.svg?branch=master)](https://travis-ci.org/RoboCup-SSL/ssl-vision)
+----
+
 ## Online Documentation
 
   To find more in-depth and up-to-date information about SSL-Vision
@@ -42,10 +46,9 @@
  * libpng
  * video for linux 2 (v4l)
 
-To get all of these packages in (k)ubuntu, run:
-```
-    sudo apt-get install g++ libqt4-dev libeigen3-dev protobuf-compiler libprotobuf-dev libdc1394-22 libdc1394-22-dev cmake libv4l-0
-```
+To get all of these packages in (k)ubuntu, run the `InstallPackagesUbuntu.sh` script.
+
+Or, in archlinux, run the `InstallPackagesArch.sh` script.
 
 ## Hardware Requirements
  * The system supports 1394B / Firewire 800, but it's also backward compatible with 1394A.
@@ -56,6 +59,12 @@ This camera type is supported via the mvIMPACT_acquire library. Tested with mvBl
 ```
 chmod +x install_mvBlueFOX.sh
 ./install_mvBlueFOX.sh -u
+```
+
+### (Optional) [Basler support](https://www.baslerweb.com/)
+Basler cameras are supported via the [Pylon Software Suite](https://www.baslerweb.com/en/products/software/basler-pylon-camera-software-suite/). Installation instructions are contained in the download. Tested with [Basler ace acA1300-75gc](https://www.baslerweb.com/en/products/cameras/area-scan-cameras/ace/aca1300-75gc/). If the library is not found on your computer support for this camera will be disabled silently. Pylon requires Opencv headers. These can be installed using the following command
+```
+sudo apt install libopencv-highgui-dev
 ```
 
 ## Compilation

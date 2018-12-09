@@ -41,6 +41,14 @@
 #include "capture_bluefox2.h"
 #endif
 
+#ifdef FLYCAP
+#include "capture_flycap.h"
+#endif
+
+#ifdef PYLON5
+#include "capture_basler.h"
+#endif
+
 /*!
   \class   CaptureThread
   \brief   A thread for capturing and processing video data
@@ -58,6 +66,7 @@ protected:
   CaptureInterface * captureDC1394;
   CaptureInterface * captureV4L;
   CaptureInterface * captureBlueFox2;
+  CaptureInterface * captureFlycap;
   CaptureInterface * captureFiles;
   CaptureInterface * captureGenerator;
   CaptureInterface * captureBasler;
@@ -69,6 +78,7 @@ protected:
   VarList * dc1394;
   VarList * v4l;
   VarList * bluefox2;
+  VarList * flycap;
   VarList * generator;
   VarList * fromfile;
   VarList * basler;

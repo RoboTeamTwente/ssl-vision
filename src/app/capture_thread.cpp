@@ -39,12 +39,12 @@ CaptureThread::CaptureThread(int cam_id)
   captureModule->addItem("Video 4 Linux");
   captureModule->addItem("Read from files");
   captureModule->addItem("Generator");
-
+  captureModule->addItem("Basler GigE");
   settings->addChild( (VarType*) (dc1394 = new VarList("DC1394")));
   settings->addChild( (VarType*) (v4l = new VarList("Video 4 Linux")));
   settings->addChild( (VarType*) (fromfile = new VarList("Read from files")));
   settings->addChild( (VarType*) (generator = new VarList("Generator")));
-
+  settings->addChild( (VarType*) (basler = new VarList("Basler GigE")));
   settings->addFlags( VARTYPE_FLAG_AUTO_EXPAND_TREE );
   c_stop->addFlags( VARTYPE_FLAG_READONLY );
   c_refresh->addFlags( VARTYPE_FLAG_READONLY );
@@ -57,7 +57,7 @@ CaptureThread::CaptureThread(int cam_id)
   counter=new FrameCounter();
   capture=0;
   captureDC1394 = new CaptureDC1394v2(dc1394,camId);
-  captureFiles = new CaptureFromFile(fromfile);
+  captureFiles = new CaptureFromFile(fromfile, camId);
   captureGenerator = new CaptureGenerator(generator);
   captureV4L = new CaptureV4L(v4l,camId);
 
@@ -68,13 +68,18 @@ CaptureThread::CaptureThread(int cam_id)
   captureBasler = new CaptureBasler(basler);
 #endif
 
+#ifdef FLYCAP
+  captureModule->addItem("Flycapture");
+  settings->addChild( (VarType*) (flycap = new VarList("Flycapture")));
+  captureFlycap = new CaptureFlycap(flycap, camId);
+#endif
 
 #ifdef MVIMPACT
   captureModule->addItem("BlueFox2");
   settings->addChild( (VarType*) (bluefox2 = new VarList("BlueFox2")));
   captureBlueFox2 = new CaptureBlueFox2(bluefox2,camId);
 #endif
-  
+
   selectCaptureMethod();
   _kill =false;
   rb=0;
@@ -100,9 +105,16 @@ CaptureThread::~CaptureThread()
   delete captureV4L;
   delete captureFiles;
   delete captureGenerator;
-  delete captureBasler;
   delete counter;
-  
+
+#ifdef PYLON5
+  delete captureBasler;
+#endif
+
+#ifdef FLYCAP
+  delete captureFlycap;
+#endif
+
 #ifdef MVIMPACT
   delete captureBlueFox2;
 #endif
@@ -136,8 +148,14 @@ void CaptureThread::selectCaptureMethod() {
     new_capture = captureV4L;
   } else if(captureModule->getString() == "DC 1394") {
     new_capture = captureDC1394;
+#ifdef FLYCAP
+  } else if(captureModule->getString() == "Flycapture") {
+    new_capture = captureFlycap;
+#endif
+#ifdef PYLON5
   } else if (captureModule->getString() == "Basler GigE") {
 	  new_capture = captureBasler;
+#endif
   }
 
   if (old_capture!=0 && new_capture!=old_capture && old_capture->isCapturing()) {
@@ -153,7 +171,7 @@ void CaptureThread::selectCaptureMethod() {
 }
 
 void CaptureThread::kill() {
- _kill=true; 
+ _kill=true;
   while(isRunning()) {
     usleep(100);
   }
