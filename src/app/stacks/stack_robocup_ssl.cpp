@@ -58,9 +58,7 @@ StackRoboCupSSL::StackRoboCupSSL(
 
   stack.push_back(new PluginColorCalibration(_fb,lut_yuv, LUTChannelMode_Numeric));
 //TODO: check if #ifdef is needed here
-  #ifdef OPENCV
-  stack.push_back(new PluginNeuralColorCalib(_fb,lut_yuv, LUTChannelMode_Numeric));
-#endif
+
   settings->addChild(lut_yuv->getSettings());
 
   stack.push_back(new PluginCameraCalibration(_fb,*camera_parameters, *global_field));

@@ -4,7 +4,7 @@
 //
 
 #include "aruco_markerfinder.h"
-//#define DEBUG
+//#define ARUCODEBUG
 
 void ArucoMarkerfinder::setG_LowerWhiteMargin(const Vec3b &g_LowerWhiteMargin) {
     ArucoMarkerfinder::g_lowerWhiteMargin = g_LowerWhiteMargin;
@@ -136,7 +136,7 @@ bool ArucoMarkerfinder::isSquareMarker(std::vector<int> &u, std::vector<int> &v,
     bool isSquareAngled = ((abs(uvCosTheta) < g_maxAngleDeviation) | (abs(uuvCosTheta) < g_maxAngleDeviation) |
             (abs(uvvCosTheta) < g_maxAngleDeviation) | (abs(uuvvCosTheta) < g_maxAngleDeviation));
     if (! isSquareAngled) {
-#ifdef DEBUG
+#ifdef ARUCODEBUG
         std::cerr << "marker dismissed: the angles are too far off 90 degrees" << std::endl;
 #endif
         return false;
@@ -146,7 +146,7 @@ bool ArucoMarkerfinder::isSquareMarker(std::vector<int> &u, std::vector<int> &v,
             (abs(uLength - uuLength)/uLength < g_maxLengthDeviation) |
             (abs(uLength - vvLength)/uLength < g_maxLengthDeviation));
     if (! hasEqualSidelength) {
-#ifdef DEBUG
+#ifdef ARUCODEBUG
         std::cerr << "marker dismissed: the marker does not have equal sidelengths)" << std::endl;
 #endif
         return false;
@@ -164,7 +164,7 @@ bool ArucoMarkerfinder::isSquareMarker(std::vector<int> &u, std::vector<int> &v,
 //*          _________       _________       marker bits have the following properties:
 //*                                          D = data
 //*          | 0 1 2 |       | D 1 D |       0 = always white ('off')
-//*          | 3 4 5 |       | P D P |       1 = always black ('on'), this is the direction of the marker
+//*          | 3 4 5 |       | P D P |       1 = always black ('on'), this is the direction of the marker (and robot)
 //*          | 6 7 8 |       | D 0 D |       P = parity:
 //*          _________       _________       "n(D) even -> P = 1" | "n(D) odd -> P = 0"
 //*
@@ -223,7 +223,7 @@ bool ArucoMarkerfinder::getRobotID(std::vector<bool> &resultData, std::vector<in
 
     }
     else {
-#ifdef DEBUG
+#ifdef ARUCODEBUG
         std::cerr << "marker dismissed: parity/direction combination incorrect" << std::endl;
 #endif
         return false;
@@ -239,7 +239,7 @@ bool ArucoMarkerfinder::getRobotID(std::vector<bool> &resultData, std::vector<in
 
     // check if the parity is odd, else the parity of the marker is wrong
     if (parity%2 == 0) {
-#ifdef DEBUG
+#ifdef ARUCODEBUG
         std::cerr << "marker dismissed: parity incorrect" << std::endl;
 #endif
         return false;
@@ -268,7 +268,7 @@ bool ArucoMarkerfinder::getCenter(float &xCenter, float &yCenter, std::vector<in
     auto aY = (float) corners[1], bY = (float) corners[3], cY = (float) corners[5], dY = (float) corners[7];
 
     if ((dY - cY)*(bX - aX) + (cX - dX)*(bY - aY) == 0) {
-#ifdef DEBUG
+#ifdef ARUCODEBUG
         std::cerr << "marker dismissed, divide by zero??: " << (dY - cY)*(bX - aX) + (cX - dX)*(bY - aY)
                   << std::endl;
 #endif
@@ -305,6 +305,7 @@ void ArucoMarkerfinder::getAngle(float &angle, std::vector<int> &orientation, st
     }
     angle = (float) (3.5*CV_PI + (thetaVector[0] + thetaVector[1])*0.5);
     while (angle > 2*CV_PI) angle -= 2*CV_PI;
+    // get the ssl-vision angle
     angle = - angle + CV_PI;
 }
 
@@ -381,7 +382,7 @@ bool ArucoMarkerfinder::checkIfSquareBlob(std::vector<int> &x, std::vector<int> 
         std::vector<int> &u, std::vector<int> &v, std::vector<int> &uu, std::vector<int> &vv) {
 
     if (endIndex - startIndex < g_minMarkerPixels) {
-#ifdef DEBUG
+#ifdef ARUCODEBUG
         std::cerr << "marker dismissed: not enough pixels" << std::endl;
 #endif
         return false;
@@ -449,7 +450,7 @@ float ArucoMarkerfinder::findMarkerData(std::vector<bool> &markerData, std::vect
                     ((ARUCOSIZE + 2)*(ARUCOSIZE + 2));
             if (xPixel < g_pixFromEdge || xPixel > image.rows - g_pixFromEdge ||
                     yPixel < g_pixFromEdge || yPixel > image.cols - g_pixFromEdge) {
-#ifdef DEBUG
+#ifdef ARUCODEBUG
                 std::cerr << "marker dismissed: bitdata of the marker is outside the image frame" << std::endl;
 #endif
                 return false;
@@ -464,7 +465,7 @@ float ArucoMarkerfinder::findMarkerData(std::vector<bool> &markerData, std::vect
                     image.at<Vec3b>((int) round(xPixel), (int) round(yPixel)) = {0, 0, 0};
                     edgeCheck ++;
                     if (edgeCheck > 2) {
-#ifdef DEBUG
+#ifdef ARUCODEBUG
                         std::cerr << "marker dismissed: the edge is not fully white" << std::endl;
 #endif
                         return false;
@@ -558,7 +559,7 @@ void ArucoMarkerfinder::findMarkers(Mat image, std::vector<int> &markerID, std::
 
         markerDataConfidence = findMarkerData(markerData, u, v, uu, vv, corners, image);
         if (markerDataConfidence < minimumConfidence) {
-#ifdef DEBUG
+#ifdef ARUCODEBUG
             std::cerr << "marker dismissed: marker has not enough confidence" << std::endl;
 #endif
             continue;
