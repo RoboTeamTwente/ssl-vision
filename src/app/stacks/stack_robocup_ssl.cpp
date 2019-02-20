@@ -96,6 +96,10 @@ StackRoboCupSSL::StackRoboCupSSL(
   PluginVisualize * vis = new PluginVisualize(_fb,*camera_parameters,*global_field);
   vis->setThresholdingLUT(lut_yuv);
   stack.push_back(vis);
+
+  PluginFindLightIntensity * lightIntensity = new PluginFindLightIntensity(_fb);
+  stack.push_back(lightIntensity);
+
 }
 string StackRoboCupSSL::getSettingsFileName() {
   return _cam_settings_filename;

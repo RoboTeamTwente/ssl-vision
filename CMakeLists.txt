@@ -14,6 +14,8 @@ if(USE_QT5)
 else()
 	cmake_minimum_required(VERSION 2.6)
 endif()
+cmake_minimum_required(VERSION 3.5)
+#set (CMAKE_CXX_STANDARD 11)
 
 #defines
 add_definitions(-D UNIX)
@@ -141,6 +143,7 @@ set (SRCS
 	src/app/gui/videowidget.cpp
 	src/app/gui/jog_dial.cpp
 
+	src/app/plugins/PluginFindLightIntensity.cpp
 	src/app/plugins/plugin_cameracalib.cpp
 	src/app/plugins/plugin_colorcalib.cpp
 	src/app/plugins/plugin_colorthreshold.cpp
