@@ -54,6 +54,9 @@ StackRoboCupSSL::StackRoboCupSSL(
   _global_plugin_publish_geometry->addCameraParameters(camera_parameters);
   _legacy_plugin_publish_geometry->addCameraParameters(camera_parameters);
 
+  PluginFindLightIntensity * lightIntensity = new PluginFindLightIntensity(_fb);
+  stack.push_back(lightIntensity);
+
   stack.push_back(new PluginDVR(_fb));
 
   stack.push_back(new PluginColorCalibration(_fb,lut_yuv, LUTChannelMode_Numeric));
@@ -97,8 +100,7 @@ StackRoboCupSSL::StackRoboCupSSL(
   vis->setThresholdingLUT(lut_yuv);
   stack.push_back(vis);
 
-  PluginFindLightIntensity * lightIntensity = new PluginFindLightIntensity(_fb);
-  stack.push_back(lightIntensity);
+
 
 }
 string StackRoboCupSSL::getSettingsFileName() {

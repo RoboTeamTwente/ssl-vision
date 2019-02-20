@@ -31,8 +31,13 @@ unsigned long long PluginFindLightIntensity::getTotalBrightnessInArea(FrameData 
     unsigned long long totalPixelColor = 0;
     for (int iX = lowerX; iX < upperX; iX++) {
         for (int iY = lowerY; iY < upperY; iY++) {
-            pixel = image + iX * 3 + iY * 3 *width;
-            pixelColor = *pixel + *(pixel+1) + *(pixel+2);
+            pixelColor = 0;
+            pixel = image + iX*3 + iY*3*width;
+            for (int iC = 0; iC < 3; iC ++) {
+                pixelColor += *(pixel + iC);
+                if (iX == lowerX || iX == upperX-1 || iY == lowerY || iY == upperY-1)
+                    *(pixel+iC) = 0;
+            }
             totalPixelColor += pixelColor;
         }
     }
