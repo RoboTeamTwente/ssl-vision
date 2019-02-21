@@ -54,7 +54,7 @@ StackRoboCupSSL::StackRoboCupSSL(
   _global_plugin_publish_geometry->addCameraParameters(camera_parameters);
   _legacy_plugin_publish_geometry->addCameraParameters(camera_parameters);
 
-  PluginFindLightIntensity * lightIntensity = new PluginFindLightIntensity(_fb);
+  PluginFindLightIntensity * lightIntensity = new PluginFindLightIntensity(_fb, *camera_parameters);
   stack.push_back(lightIntensity);
 
   stack.push_back(new PluginDVR(_fb));
