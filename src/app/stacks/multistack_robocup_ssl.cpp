@@ -30,7 +30,7 @@ MultiStackRoboCupSSL::MultiStackRoboCupSSL(RenderOptions * _opts, int cameras) :
 
   global_ball_settings = new PluginDetectBallsSettings();
   settings->addChild(global_ball_settings->getSettings());
-
+  
   global_team_settings = new CMPattern::TeamDetectorSettings("robocup-ssl-teams.xml");
   settings->addChild(global_team_settings->getSettings());
 

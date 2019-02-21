@@ -31,7 +31,7 @@ class PluginFindLightIntensitySettings {
 
     public:
         PluginFindLightIntensitySettings() {
-            _settings = new VarList("Light Intensity settings");
+            _settings = new VarList("Light Intensity Settings");
             _settings->addChild(is_enabled = new VarBool("Enabled", true));
             _settings->addChild(left_lower_x = new VarInt("Left lower x-value", 50, 0));
             _settings->addChild(left_upper_x = new VarInt("Left upper x-value", 270, 0));
@@ -41,7 +41,6 @@ class PluginFindLightIntensitySettings {
             _settings->addChild(right_upper_x = new VarInt("Right upper x-value", 590, 0));
             _settings->addChild(right_lower_y = new VarInt("Right lower y-value", 50, 0));
             _settings->addChild(right_upper_y = new VarInt("Right upper y-value", 430, 0));
-
         }
 
         VarList * getSettings() {
@@ -54,6 +53,7 @@ class PluginFindLightIntensity : public VisionPlugin {
         unsigned char getTotalBrightnessInArea(FrameData* data, int lowerX, int upperX, int lowerY, int upperY);
     protected:
         PluginFindLightIntensitySettings * _settings;
+        VarNotifier _notifier;
 
         bool _is_enabled;
         unsigned int _left_lower_x;
@@ -65,13 +65,13 @@ class PluginFindLightIntensity : public VisionPlugin {
         unsigned int _right_lower_y;
         unsigned int _right_upper_y;
 
-        VarNotifier _notifier;
         const CameraParameters& camera_parameters;
 
     public:
         virtual ProcessResult process(FrameData * data, RenderOptions * options);
         virtual void postProcess(FrameData* data, RenderOptions* options);
         virtual std::string getName();
+        virtual VarList * getSettings();
 
         PluginFindLightIntensity(FrameBuffer* _buffer, const CameraParameters &camera_params);
 

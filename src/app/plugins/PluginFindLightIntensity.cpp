@@ -4,6 +4,10 @@
 
 #include "PluginFindLightIntensity.h"
 
+VarList *PluginFindLightIntensity::getSettings() {
+    return _settings->getSettings();
+}
+
 PluginFindLightIntensity::PluginFindLightIntensity(FrameBuffer* _buffer, const CameraParameters &camera_params)
     : VisionPlugin(_buffer), camera_parameters(camera_params) {
 
@@ -28,11 +32,11 @@ unsigned char PluginFindLightIntensity::getTotalBrightnessInArea(FrameData* data
     int width = data->video.getWidth();
     int height = data->video.getHeight();
 
-    static bool firstTime = true;
-    if (firstTime) {
-        firstTime = false;
-        std::cout << "x: " << width << ", y: " << height << std::endl;
-    }
+//    static bool firstTime = true;
+//    if (firstTime) {
+//        firstTime = false;
+//        std::cout << "x: " << width << ", y: " << height << std::endl;
+//    }
 
     //std::cout << "color:" << data->video.getColorFormat() << std::endl;
     if (lowerX < 0 || lowerX >= upperX || lowerX >= width) {
@@ -77,7 +81,7 @@ unsigned char PluginFindLightIntensity::getTotalBrightnessInArea(FrameData* data
 ProcessResult PluginFindLightIntensity::process(FrameData* data, RenderOptions* options) {
     (void)options;
 
-    if (_notifier.hasChanged()) {
+    //if (_notifier.hasChanged()) {
         _is_enabled = _settings->is_enabled->getBool();
         _left_lower_x = static_cast<unsigned int>(_settings->left_lower_x->getInt());
         _left_upper_x = static_cast<unsigned int>(_settings->left_upper_x->getInt());
@@ -86,8 +90,8 @@ ProcessResult PluginFindLightIntensity::process(FrameData* data, RenderOptions* 
         _right_lower_x = static_cast<unsigned int>(_settings->right_lower_x->getInt());
         _right_upper_x = static_cast<unsigned int>(_settings->right_upper_x->getInt());
         _right_lower_y = static_cast<unsigned int>(_settings->right_lower_y->getInt());
-        _right_upper_y = static_cast<unsigned int>(_settings->right_lower_y->getInt());
-    }
+        _right_upper_y = static_cast<unsigned int>(_settings->right_upper_y->getInt());
+    //}
     if (!_is_enabled) {
         return ProcessingOk;
     }
