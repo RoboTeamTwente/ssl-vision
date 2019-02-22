@@ -10,7 +10,7 @@ VarList *PluginFindLightIntensity::getSettings() {
 
 PluginFindLightIntensity::PluginFindLightIntensity(FrameBuffer* _buffer, const CameraParameters &camera_params)
     : VisionPlugin(_buffer), camera_parameters(camera_params) {
-
+    print = 0;
     _settings = new PluginFindLightIntensitySettings();
     _notifier.addRecursive(_settings->getSettings());
     _is_enabled = _settings->is_enabled->getBool();
@@ -108,7 +108,11 @@ ProcessResult PluginFindLightIntensity::process(FrameData* data, RenderOptions* 
             _right_upper_x,
             _right_lower_y,
             _right_upper_y);
-
+    
+    if (print++ < 30) {
+        return ProcessingOk;
+    }
+    print = 0;
     std::cout << "        Left square total brightness: " << static_cast<unsigned short>(totalColorLeft) << std::endl;
     std::cout << "Right square total brightness: " << static_cast<unsigned short>(totalColorRight) << std::endl;
 

@@ -54,7 +54,7 @@ class PluginFindLightIntensity : public VisionPlugin {
     protected:
         PluginFindLightIntensitySettings * _settings;
         VarNotifier _notifier;
-
+        short print;
         bool _is_enabled;
         unsigned int _left_lower_x;
         unsigned int _left_upper_x;
