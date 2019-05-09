@@ -51,7 +51,7 @@ void VisionStack::process(FrameData * data) {
   unsigned int n=stack.size();
   VisionPlugin * p;
   double total=0.0;
-  bool show_timing = true;
+  bool show_timing = false;
   if (show_timing) printf("----------\n");
   for (unsigned int i=0;i<n;i++) {
     p=stack[i];
