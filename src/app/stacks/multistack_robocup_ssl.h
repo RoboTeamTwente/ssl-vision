@@ -25,6 +25,7 @@
 #include "multivisionstack.h"
 #include "stack_robocup_ssl.h"
 #include "plugin_detect_balls.h"
+#include "plugin_detect_balls_settings.h"
 #include "plugin_publishgeometry.h"
 #include "cmpattern_teamdetector.h"
 #include "robocup_ssl_server.h"

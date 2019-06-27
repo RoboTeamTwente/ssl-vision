@@ -146,6 +146,7 @@ set (SRCS
 	src/app/plugins/plugin_colorthreshold.cpp
 	src/app/plugins/plugin_detect_balls.cpp
 	src/app/plugins/plugin_detect_robots.cpp
+		src/app/plugins/plugin_techincal_challenge.cpp
 	src/app/plugins/plugin_find_blobs.cpp
 	src/app/plugins/plugin_publishgeometry.cpp
 	src/app/plugins/plugin_legacypublishgeometry.cpp

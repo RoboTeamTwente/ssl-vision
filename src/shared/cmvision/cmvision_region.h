@@ -92,6 +92,8 @@ class Region{
     {return(x2-x1+1);}
   int height() const
     {return(y2-y1+1);}
+  double squareness() const
+    {return (double)width()/height() < 1.0 ? (double) width()/height() : (double) height()/width();}
 };
 
 class RegionList {

@@ -18,8 +18,8 @@
   \author  Author Name, 2009
 */
 //========================================================================
-#include <list>
 #include "plugin_detect_balls.h"
+#include "plugin_detect_balls_settings.h"
 
 PluginDetectBalls::PluginDetectBalls ( FrameBuffer * _buffer, LUT3D * lut, const CameraParameters& camera_params, const RoboCupField& field,PluginDetectBallsSettings * settings )
     : VisionPlugin ( _buffer ), camera_parameters ( camera_params ), field ( field ) {
@@ -88,23 +88,6 @@ bool PluginDetectBalls::checkHistogram ( const Image<raw8> * image, const CMVisi
   if ( markeryness > max_markeryness ) return ( false );
   return ( true );
 }
-
-//Data structure for storing and sorting the filtered regions
-class BallDetectResult
-{
-public:
-  const CMVision::Region* reg;
-  float conf;
-
-  BallDetectResult(const CMVision::Region* reg, float conf) {
-    this->reg = reg;
-    this->conf = conf;    
-  }
-
-  bool operator< (BallDetectResult a) {
-    return conf < a.conf;
-  }
-};
 
 ProcessResult PluginDetectBalls::process ( FrameData * data, RenderOptions * options ) {
   ( void ) options;
