@@ -50,6 +50,9 @@ class BallDetectResult {
         }
 
         bool operator<(BallDetectResult a) {
+            if (a.conf == 0 ^ conf == 0) {
+                return conf == 0;
+            }
 
             int areaDiff = a.reg->area - reg->area;
             int squarenessDiff = static_cast<int>((a.reg->squareness() - reg->squareness() )*10);

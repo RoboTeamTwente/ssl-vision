@@ -21,6 +21,7 @@ class PluginTechnicalChallenge : public PluginDetectBalls {
         virtual ProcessResult process(FrameData * data, RenderOptions * options);
         virtual VarList * getSettings();
         virtual string getName();
+        bool isValidPosition(const CMVision::Region* reg);
 };
 
 #endif //SSL_VISION_PLUGINTECHINCALCHALLENGE_H

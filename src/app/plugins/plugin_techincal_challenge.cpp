@@ -122,8 +122,12 @@ ProcessResult PluginTechnicalChallenge::process(FrameData* data, RenderOptions* 
             }
 
             // histogram check if enabled
-            if (filter_ball_histogram && conf > 0.0
+            if (filter_ball_histogram && conf > 0
                     && checkHistogram(image, reg, min_greenness, max_markeryness) == false) {
+                conf = 0;
+            }
+
+            if (conf > 0 && !isValidPosition(reg)) {
                 conf = 0;
             }
 
@@ -186,20 +190,25 @@ void PluginTechnicalChallenge::image2relativeToRobot(GVector::vector3d<double> &
         return;
     }
 
-//    int area = reg->area;
-//    int width = reg->width();
-//    int height = reg->height();
-//    int size = width*height;
-//    if (width <= 0 || height <= 0) {
-//        rtr = GVector::vector3d<double>(10.0, 0.0, 0.0);
-//        return;
-//    }
-//    double squareness = reg->squareness();
-
-//    std::cout << "\nArea: " << area << "\nWidth: " << width << "\nHeight: " << height << "\nSize: " << size <<
-//              "\nSquareness: " << squareness << std::endl;
-
     vector2d pixel_pos(reg->cen_x, reg->cen_y);
     camera_parameters.image2field(rtr, pixel_pos, z_height);
     std::cout << "\nx: " << rtr.x << "\ny: " << rtr.y << "\nz: " << rtr.z << std::endl;
+}
+
+bool PluginTechnicalChallenge::isValidPosition(const CMVision::Region* reg) {
+    if (! reg) {
+        std::cout << "reg == nullptr??" << std::endl;
+        return false;
+    }
+
+    vector2d pixel_pos(reg->cen_x, reg->cen_y);
+    GVector::vector3d<double> rtr;
+    camera_parameters.image2field(rtr, pixel_pos, z_height);
+
+    if (rtr.x < 0) {
+        std::cerr << " X < 0 !!!  " << std::endl;
+        return false;
+    }
+
+    return true;
 }
